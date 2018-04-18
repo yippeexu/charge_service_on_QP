@@ -32,7 +32,7 @@
 ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Stack_Size      EQU     0x00000400
+; QL commeted out: Stack_Size      EQU     0x00000400
 
                 AREA    STACK, NOINIT, READWRITE, ALIGN=3
 Stack_Mem       SPACE   Stack_Size
@@ -42,7 +42,7 @@ __initial_sp
 ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Heap_Size       EQU     0x00000200
+; QL commeted out: Heap_Size       EQU     0x00000200
 
                 AREA    HEAP, NOINIT, READWRITE, ALIGN=3
 __heap_base
@@ -152,50 +152,67 @@ Reset_Handler   PROC
                 BLX     R0               
                 LDR     R0, =__main
                 BX      R0
+
+				MOVS    r0,#0
+				MOVS    r1,#0       ; error number
+				B       assert_failed ; __main should not return, but assert if it does
                 ENDP
                 
 ; Dummy Exception Handlers (infinite loops which can be modified)
 
 NMI_Handler     PROC
-                EXPORT  NMI_Handler                [WEAK]
-                B       .
+				EXPORT  NMI_Handler     [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#2       ; NMI exception number
+				B       assert_failed
                 ENDP
-HardFault_Handler\
-                PROC
-                EXPORT  HardFault_Handler          [WEAK]
-                B       .
+HardFault_Handler PROC
+				EXPORT  HardFault_Handler [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#3       ; HardFault exception number
+				B       assert_failed
                 ENDP
-MemManage_Handler\
-                PROC
-                EXPORT  MemManage_Handler          [WEAK]
-                B       .
+MemManage_Handler PROC
+				EXPORT  MemManage_Handler     [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#4       ; MemManage exception number
+				B       assert_failed
                 ENDP
-BusFault_Handler\
-                PROC
-                EXPORT  BusFault_Handler           [WEAK]
-                B       .
+BusFault_Handler PROC
+				EXPORT  BusFault_Handler     [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#5       ; BusFault exception number
+				B       assert_failed
                 ENDP
-UsageFault_Handler\
-                PROC
-                EXPORT  UsageFault_Handler         [WEAK]
-                B       .
+UsageFault_Handler PROC
+				EXPORT  UsageFault_Handler   [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#6       ; UsageFault exception number
+				B       assert_failed
                 ENDP
 SVC_Handler     PROC
-                EXPORT  SVC_Handler                [WEAK]
-                B       .
+				EXPORT  SVC_Handler   [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#11      ; SVCall exception number
+				B       assert_failed
                 ENDP
-DebugMon_Handler\
-                PROC
-                EXPORT  DebugMon_Handler           [WEAK]
-                B       .
+DebugMon_Handler PROC
+				EXPORT  DebugMon_Handler     [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#12      ; DebugMon exception number
+				B       assert_failed
                 ENDP
 PendSV_Handler  PROC
-                EXPORT  PendSV_Handler             [WEAK]
-                B       .
+				EXPORT  PendSV_Handler       [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#14      ; PendSV exception number
+				B       assert_failed
                 ENDP
 SysTick_Handler PROC
-                EXPORT  SysTick_Handler            [WEAK]
-                B       .
+				EXPORT  SysTick_Handler     [WEAK]
+				MOVS    r0,#0
+				MOVS    r1,#15      ; SysTick exception number
+				B       assert_failed
                 ENDP
 
 Default_Handler PROC
@@ -352,6 +369,32 @@ __user_initial_stackheap
                  ALIGN
 
                  ENDIF
+
+;******************************************************************************
+;
+; The function assert_failed defines the error/assertion handling policy
+; for the application. After making sure that the stack is OK, this function
+; calls Q_onAssert, which should NOT return (typically reset the CPU).
+;
+; NOTE: the function Q_onAssert should NOT return.
+;
+; The C proptotype of the assert_failed() and Q_onAssert() functions are:
+; void assert_failed(char const *file, int line);
+; void Q_onAssert   (char const *file, int line);
+;******************************************************************************
+				EXPORT  assert_failed
+				IMPORT  Q_onAssert
+assert_failed PROC
+
+				LDR    sp,=__initial_sp  ; re-set the SP in case of stack overflow
+				BL     Q_onAssert        ; call the application-specific handler
+
+				B      .                 ; should not be reached, but just in case...
+
+				ENDP
+
+				ALIGN                    ; make sure the end of this section is aligned
+
 
                  END
 
