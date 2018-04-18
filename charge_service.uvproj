@@ -586,6 +586,11 @@
               <FileType>5</FileType>
               <FilePath>.\QP\src\qs_pkg.h</FilePath>
             </File>
+            <File>
+              <FileName>qstamp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\QP\include\qstamp.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
