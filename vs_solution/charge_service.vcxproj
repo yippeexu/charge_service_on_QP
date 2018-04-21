@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{56C57EFB-EB24-47EF-BFB2-0934F29D83FE}</ProjectGuid>
+    <RootNamespace>charge_service</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>..\CMSIS\4.2.0\CMSIS\Include;..\QP\include;..\QP\src;..\QP_port\arm-cm\qk\arm;..\STM32F1xx_DFP\2.0.0\Device\Include;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\QP\src\qf\qep_hsm.c" />
+    <ClCompile Include="..\QP\src\qf\qep_msm.c" />
+    <ClCompile Include="..\QP\src\qf\qf_act.c" />
+    <ClCompile Include="..\QP\src\qf\qf_actq.c" />
+    <ClCompile Include="..\QP\src\qf\qf_defer.c" />
+    <ClCompile Include="..\QP\src\qf\qf_dyn.c" />
+    <ClCompile Include="..\QP\src\qf\qf_mem.c" />
+    <ClCompile Include="..\QP\src\qf\qf_ps.c" />
+    <ClCompile Include="..\QP\src\qf\qf_qact.c" />
+    <ClCompile Include="..\QP\src\qf\qf_qeq.c" />
+    <ClCompile Include="..\QP\src\qf\qf_qmact.c" />
+    <ClCompile Include="..\QP\src\qf\qf_time.c" />
+    <ClCompile Include="..\QP\src\qk\qk.c" />
+    <ClCompile Include="..\QP\src\qs\qs.c" />
+    <ClCompile Include="..\QP\src\qs\qs_64bit.c" />
+    <ClCompile Include="..\QP\src\qs\qs_fp.c" />
+    <ClCompile Include="..\QP_port\arm-cm\qk\arm\qk_port.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\Source\system_stm32f10x.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\misc.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_adc.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_bkp.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_can.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_cec.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_crc.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_dac.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_dbgmcu.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_dma.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_exti.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_flash.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_fsmc.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_gpio.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_i2c.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_iwdg.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_pwr.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_rcc.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_rtc.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_sdio.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_spi.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_tim.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_usart.c" />
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_wwdg.c" />
+    <ClCompile Include="..\user\main.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qep_port.h" />
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qf_port.h" />
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qk_port.h" />
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qs_port.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

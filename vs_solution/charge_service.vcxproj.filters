@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="QP">
+      <UniqueIdentifier>{193434e1-fe63-41e6-8f53-93701bebe2a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QP_port">
+      <UniqueIdentifier>{28cdc928-2547-444f-8e02-8457365252b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QS">
+      <UniqueIdentifier>{985c540d-a841-4dbf-a4e9-badf67524d54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="user">
+      <UniqueIdentifier>{7158d4da-1399-4364-b026-b3659999e44b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QP_port\arm-cm">
+      <UniqueIdentifier>{eb9c98b0-375b-482b-9314-894a0776f1c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QP_port\arm-cm\qk">
+      <UniqueIdentifier>{a2955cd0-368e-4682-8b86-f2c96f3bd602}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QP_port\arm-cm\qk\arm">
+      <UniqueIdentifier>{99ccdf99-8a5f-4c68-917f-a87754bcf5b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="STM32F1XX">
+      <UniqueIdentifier>{e83479ac-89a6-4f63-8694-ae67c401195b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="STM32F1XX\driver">
+      <UniqueIdentifier>{e988cb04-cfec-46ad-b89f-7bc014a14196}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\QP\src\qf\qep_hsm.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qep_msm.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_act.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_actq.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_defer.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_dyn.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_mem.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_ps.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_qact.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_qeq.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_qmact.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qf\qf_time.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qk\qk.c">
+      <Filter>QP</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qs\qs_fp.c">
+      <Filter>QS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qs\qs.c">
+      <Filter>QS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qs\qs_64bit.c">
+      <Filter>QS</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP_port\arm-cm\qk\arm\qk_port.c">
+      <Filter>QP_port\arm-cm\qk\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\Source\system_stm32f10x.c">
+      <Filter>STM32F1XX</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_adc.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_bkp.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_can.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_cec.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_crc.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_dac.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_dbgmcu.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_dma.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_exti.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_flash.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_fsmc.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_gpio.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_i2c.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_iwdg.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_pwr.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_rcc.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_rtc.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_sdio.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_spi.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_tim.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_usart.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_wwdg.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\misc.c">
+      <Filter>STM32F1XX\driver</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\main.c">
+      <Filter>user</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qep_port.h">
+      <Filter>QP_port\arm-cm\qk\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qf_port.h">
+      <Filter>QP_port\arm-cm\qk\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qk_port.h">
+      <Filter>QP_port\arm-cm\qk\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qs_port.h">
+      <Filter>QP_port\arm-cm\qk\arm</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s">
+      <Filter>STM32F1XX</Filter>
+    </None>
+  </ItemGroup>
+</Project>
