@@ -124,11 +124,11 @@
     <ClCompile Include="..\QP\src\qf\qf_qeq.c" />
     <ClCompile Include="..\QP\src\qf\qf_qmact.c" />
     <ClCompile Include="..\QP\src\qf\qf_time.c" />
-    <ClCompile Include="..\QP\src\qk\qk.c" />
     <ClCompile Include="..\QP\src\qs\qs.c" />
     <ClCompile Include="..\QP\src\qs\qs_64bit.c" />
     <ClCompile Include="..\QP\src\qs\qs_fp.c" />
-    <ClCompile Include="..\QP_port\arm-cm\qk\arm\qk_port.c" />
+    <ClCompile Include="..\QP\src\qv\qv.c" />
+    <ClCompile Include="..\QP_port\arm-cm\qv\arm\qv_port.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\Source\system_stm32f10x.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\misc.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_adc.c" />
@@ -156,13 +156,13 @@
     <ClCompile Include="..\user\main.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qep_port.h" />
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qf_port.h" />
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qk_port.h" />
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qs_port.h" />
+    <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s" />
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qep_port.h" />
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qf_port.h" />
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qs_port.h" />
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qv_port.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

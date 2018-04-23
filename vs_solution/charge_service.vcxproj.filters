@@ -16,17 +16,17 @@
     <Filter Include="QP_port\arm-cm">
       <UniqueIdentifier>{eb9c98b0-375b-482b-9314-894a0776f1c2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="QP_port\arm-cm\qk">
-      <UniqueIdentifier>{a2955cd0-368e-4682-8b86-f2c96f3bd602}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="QP_port\arm-cm\qk\arm">
-      <UniqueIdentifier>{99ccdf99-8a5f-4c68-917f-a87754bcf5b8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="STM32F1XX">
       <UniqueIdentifier>{e83479ac-89a6-4f63-8694-ae67c401195b}</UniqueIdentifier>
     </Filter>
     <Filter Include="STM32F1XX\driver">
       <UniqueIdentifier>{e988cb04-cfec-46ad-b89f-7bc014a14196}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QP_port\arm-cm\qv">
+      <UniqueIdentifier>{ba0bf5b8-f97c-471e-86b1-236765fe1f31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="QP_port\arm-cm\qv\arm">
+      <UniqueIdentifier>{ecd626a6-a199-48b8-905c-b53b8e0dab6e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -66,9 +66,6 @@
     <ClCompile Include="..\QP\src\qf\qf_time.c">
       <Filter>QP</Filter>
     </ClCompile>
-    <ClCompile Include="..\QP\src\qk\qk.c">
-      <Filter>QP</Filter>
-    </ClCompile>
     <ClCompile Include="..\QP\src\qs\qs_fp.c">
       <Filter>QS</Filter>
     </ClCompile>
@@ -77,9 +74,6 @@
     </ClCompile>
     <ClCompile Include="..\QP\src\qs\qs_64bit.c">
       <Filter>QS</Filter>
-    </ClCompile>
-    <ClCompile Include="..\QP_port\arm-cm\qk\arm\qk_port.c">
-      <Filter>QP_port\arm-cm\qk\arm</Filter>
     </ClCompile>
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\Source\system_stm32f10x.c">
       <Filter>STM32F1XX</Filter>
@@ -156,24 +150,30 @@
     <ClCompile Include="..\user\main.c">
       <Filter>user</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qep_port.h">
-      <Filter>QP_port\arm-cm\qk\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qf_port.h">
-      <Filter>QP_port\arm-cm\qk\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qk_port.h">
-      <Filter>QP_port\arm-cm\qk\arm</Filter>
-    </ClInclude>
-    <ClInclude Include="..\QP_port\arm-cm\qk\arm\qs_port.h">
-      <Filter>QP_port\arm-cm\qk\arm</Filter>
-    </ClInclude>
+    <ClCompile Include="..\QP_port\arm-cm\qv\arm\qv_port.c">
+      <Filter>QP_port\arm-cm\qv\arm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\QP\src\qv\qv.c">
+      <Filter>QP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s">
       <Filter>STM32F1XX</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qep_port.h">
+      <Filter>QP_port\arm-cm\qv\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qf_port.h">
+      <Filter>QP_port\arm-cm\qv\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qs_port.h">
+      <Filter>QP_port\arm-cm\qv\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\QP_port\arm-cm\qv\arm\qv_port.h">
+      <Filter>QP_port\arm-cm\qv\arm</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

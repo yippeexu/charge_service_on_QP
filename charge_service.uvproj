@@ -363,7 +363,7 @@
               <MiscControls></MiscControls>
               <Define>HSE_VALUE=4000000 USE_STDPERIPH_DRIVER Q_SPY</Define>
               <Undefine></Undefine>
-              <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qk\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates</IncludePath>
+              <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qv\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -527,9 +527,9 @@
               <FilePath>.\QP\src\qf\qf_time.c</FilePath>
             </File>
             <File>
-              <FileName>qk.c</FileName>
+              <FileName>qv.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\QP\src\qk\qk.c</FilePath>
+              <FilePath>.\QP\src\qv\qv.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -539,27 +539,27 @@
             <File>
               <FileName>qep_port.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\QP_port\arm-cm\qk\arm\qep_port.h</FilePath>
+              <FilePath>.\QP_port\arm-cm\qv\arm\qep_port.h</FilePath>
             </File>
             <File>
               <FileName>qf_port.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\QP_port\arm-cm\qk\arm\qf_port.h</FilePath>
-            </File>
-            <File>
-              <FileName>qk_port.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\QP_port\arm-cm\qk\arm\qk_port.c</FilePath>
-            </File>
-            <File>
-              <FileName>qk_port.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\QP_port\arm-cm\qk\arm\qk_port.h</FilePath>
+              <FilePath>.\QP_port\arm-cm\qv\arm\qf_port.h</FilePath>
             </File>
             <File>
               <FileName>qs_port.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\QP_port\arm-cm\qk\arm\qs_port.h</FilePath>
+              <FilePath>.\QP_port\arm-cm\qv\arm\qs_port.h</FilePath>
+            </File>
+            <File>
+              <FileName>qv_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\QP_port\arm-cm\qv\arm\qv_port.c</FilePath>
+            </File>
+            <File>
+              <FileName>qv_port.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\QP_port\arm-cm\qv\arm\qv_port.h</FilePath>
             </File>
           </Files>
         </Group>
