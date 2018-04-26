@@ -69,7 +69,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\CMSIS\4.2.0\CMSIS\Include;..\QP\include;..\QP\src;..\QP_port\arm-cm\qk\arm;..\STM32F1xx_DFP\2.0.0\Device\Include;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;$(IncludePath)</IncludePath>
+    <IncludePath>..\CMSIS\4.2.0\CMSIS\Include;..\QP\include;..\QP\src;..\QP_port\arm-cm\qv\arm;..\STM32F1xx_DFP\2.0.0\Device\Include;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
