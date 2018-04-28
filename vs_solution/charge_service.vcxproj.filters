@@ -156,6 +156,24 @@
     <ClCompile Include="..\QP\src\qv\qv.c">
       <Filter>QP</Filter>
     </ClCompile>
+    <ClCompile Include="..\user\bsp.c">
+      <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\system.c">
+      <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\module_rx.c">
+      <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\module.c">
+      <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\fifo.c">
+      <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\bsp_usart.c">
+      <Filter>user</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s">
@@ -174,6 +192,9 @@
     </ClInclude>
     <ClInclude Include="..\QP_port\arm-cm\qv\arm\qv_port.h">
       <Filter>QP_port\arm-cm\qv\arm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\user\bsp.h">
+      <Filter>user</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

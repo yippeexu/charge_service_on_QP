@@ -69,13 +69,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>..\CMSIS\4.2.0\CMSIS\Include;..\QP\include;..\QP\src;..\QP_port\arm-cm\qv\arm;..\STM32F1xx_DFP\2.0.0\Device\Include;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;$(IncludePath)</IncludePath>
+    <IncludePath>..\CMSIS\4.2.0\CMSIS\Include;..\QP\include;..\QP\src;..\QP_port\arm-cm\qv\arm;..\STM32F1xx_DFP\2.0.0\Device\Include;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;..\user;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>__CC_ARM;HSE_VALUE=4000000;USE_STDPERIPH_DRIVER;Q_SPY</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,7 +154,13 @@
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_tim.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_usart.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_wwdg.c" />
+    <ClCompile Include="..\user\bsp.c" />
+    <ClCompile Include="..\user\bsp_usart.c" />
+    <ClCompile Include="..\user\fifo.c" />
     <ClCompile Include="..\user\main.c" />
+    <ClCompile Include="..\user\module.c" />
+    <ClCompile Include="..\user\module_rx.c" />
+    <ClCompile Include="..\user\system.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s" />
@@ -163,6 +170,7 @@
     <ClInclude Include="..\QP_port\arm-cm\qv\arm\qf_port.h" />
     <ClInclude Include="..\QP_port\arm-cm\qv\arm\qs_port.h" />
     <ClInclude Include="..\QP_port\arm-cm\qv\arm\qv_port.h" />
+    <ClInclude Include="..\user\bsp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

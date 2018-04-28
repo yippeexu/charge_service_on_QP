@@ -164,8 +164,8 @@
         </DebugOption>
         <Utilities>
           <Flash1>
-            <UseTargetDll>0</UseTargetDll>
-            <UseExternalTool>1</UseExternalTool>
+            <UseTargetDll>1</UseTargetDll>
+            <UseExternalTool>0</UseExternalTool>
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
@@ -363,7 +363,7 @@
               <MiscControls></MiscControls>
               <Define>HSE_VALUE=4000000 USE_STDPERIPH_DRIVER Q_SPY</Define>
               <Undefine></Undefine>
-              <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qv\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates</IncludePath>
+              <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qv\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;.\user</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -410,6 +410,36 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\user\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\bsp.c</FilePath>
+            </File>
+            <File>
+              <FileName>fifo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\fifo.c</FilePath>
+            </File>
+            <File>
+              <FileName>module.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\module.c</FilePath>
+            </File>
+            <File>
+              <FileName>module_rx.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\module_rx.c</FilePath>
+            </File>
+            <File>
+              <FileName>system.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\system.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\bsp_usart.c</FilePath>
             </File>
           </Files>
         </Group>
