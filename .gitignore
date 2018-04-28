@@ -11,3 +11,13 @@
 *.lnp
 *.htm
 *.txt
+*.obj
+*.log
+*.tlog
+*.opendb
+*.db
+/charge_service.uvgui.Ryan
+*.ini
+*.idb
+*.pdb
+*.suo
