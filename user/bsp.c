@@ -2,6 +2,7 @@
 #include "charger.h"
 #include "bsp.h"
 
+#include <system.h>
 #include <fifo.h>
 Q_DEFINE_THIS_MODULE("bsp")
 
@@ -15,6 +16,8 @@ enum KernelAwareISRs {
 Q_ASSERT_COMPILE(MAX_KERNEL_AWARE_CMSIS_PRI <= (0xFF >> (8 - __NVIC_PRIO_BITS)));
 
 extern fifo_t receiver_fifo;
+static uint64_t m_timestamp = 31507200; // 默认值为1971-01-01 00:00:00
+static uint8_t timestamp_factor_count = 0;
 
 void SysTick_Handler(void);
 void BSP_RCC_init(void);
@@ -29,9 +32,11 @@ void BSP_l206_gpio_init(void);
 	static uint8_t const l_SysTick_Handler = 0U;
 	static uint8_t const l_Usart1_IRQHandler = 0U;
 	static uint8_t const l_debug_port = 0U;
+	static uint8_t const l_usart_port = 0U;
 
 	enum AppRecords { /* application-specific trace records */
-		USER_DEBUG_PORT = QS_USER
+		USER_DEBUG_PORT = QS_USER,
+		USER_USART_PORT
 	};
 
 #endif
@@ -61,7 +66,21 @@ void BSP_init(void) {
 	QS_OBJ_DICTIONARY(&l_SysTick_Handler);
 	QS_OBJ_DICTIONARY(&l_Usart1_IRQHandler);
 	QS_OBJ_DICTIONARY(&l_debug_port);
+	QS_OBJ_DICTIONARY(&l_usart_port);
 
+
+}
+
+void set_timestamp(uint64_t stamp)
+{
+	QF_INT_DISABLE();
+	m_timestamp = stamp;
+	QF_INT_ENABLE();
+}
+
+uint64_t get_timestamp(void)
+{
+	return m_timestamp;
 }
 
 /* ISRs used in the application ==========================================*/
@@ -76,6 +95,14 @@ void SysTick_Handler(void) {   /* system clock tick ISR */
 	}
 #endif
 
+	/* 系统时间戳计数 */
+	if (++timestamp_factor_count >= BSP_TICKS_PER_SEC) {
+		timestamp_factor_count = 0;
+		QF_INT_DISABLE();
+		m_timestamp++;
+		QF_INT_ENABLE();
+	}
+	
 	QF_TICK_X(0U, &l_SysTick_Handler); /* process time events for rate 0 */
 }
 
@@ -91,7 +118,7 @@ void USART1_IRQHandler(void)
 	{
 		USART_ClearITPendingBit(USART1, USART_IT_RXNE);	// 清中断标记
 
-		uint8_t d = USART_ReceiveData(USART1);	/* Get received byte */
+		uint16_t d = USART_ReceiveData(USART1);	/* Get received byte */
 
 
 		if (fifo_len(&receiver_fifo) == 0)
@@ -100,7 +127,11 @@ void USART1_IRQHandler(void)
 			QACTIVE_POST(AO_Module_rx, &beginEvt, &l_Usart1_IRQHandler);
 		}
 
-		fifo_in_c(&receiver_fifo, d); //put into receiver fifo
+		fifo_in_c(&receiver_fifo, (uint8_t)d); //put into receiver fifo
+		//QS_BEGIN(USER_USART_PORT, &l_usart_port); /* application-specific record begin */
+		//	//QS_STR(&d);                 /* debug info */
+		//	QS_U8(1, d);
+		//QS_END()
 	}
 }
 
@@ -201,6 +232,8 @@ uint8_t QS_onStartup(void const *arg) {
 	QS_FILTER_ON(QS_QEP_UNHANDLED);
 
 	QS_FILTER_ON(USER_DEBUG_PORT);
+	QS_FILTER_ON(USER_USART_PORT);
+
 
 	return (uint8_t)1; /* return success */
 }
@@ -308,18 +341,16 @@ void BSP_l206_gpio_init(void)
 	GPIO_Init(PWRKEY_PORT, &GPIO_InitStructure);
 }
 
-void debug_str(char const *str)
+void _debug_print(char *fmt, ...)
 {
-	QS_BEGIN(USER_DEBUG_PORT, &l_debug_port); /* application-specific record begin */
-	QS_STR("[debug str] ");
-	QS_STR(str);                 /* debug info */
-	QS_END()
-}
+	char buf[100];
 
-void debug_int(uint8_t a)
-{
+	va_list ap;
+	va_start(ap, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
+	va_end(ap);
+
 	QS_BEGIN(USER_DEBUG_PORT, &l_debug_port); /* application-specific record begin */
-	QS_STR("[debug int] ");
-	QS_U8(1, a);                 /* integer */
+	QS_STR(buf);							/* debug info */
 	QS_END()
 }

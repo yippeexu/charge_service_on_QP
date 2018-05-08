@@ -16,8 +16,9 @@ int main()
 	static QEvt const *moduleQueueSto[4];
 	static QEvt const *moduleRxQueueSto[3];
 
-	static QF_MPOOL_EL(QEvt)			smlPoolSto[10];
-	static QF_MPOOL_EL(UartDataEvt)		medPoolSto[3];
+	static QF_MPOOL_EL(QEvt)				smlPoolSto[10];
+	static QF_MPOOL_EL(UartDataEvt)			medPoolSto[4];
+	static QF_MPOOL_EL(largeUartDataEvt)	largePoolSto[2];
 
 	/* explicitly invoke the active objects' ctors... */
 	Module_ctor();
@@ -29,6 +30,7 @@ int main()
 	/* initialize the event pools... */
 	QF_poolInit(smlPoolSto, sizeof(smlPoolSto), sizeof(smlPoolSto[0]));
 	QF_poolInit(medPoolSto, sizeof(medPoolSto), sizeof(medPoolSto[0]));
+	QF_poolInit(largePoolSto, sizeof(largePoolSto), sizeof(largePoolSto[0]));
 
 	/* send object dictionaries for event queues... */
 	QS_OBJ_DICTIONARY(moduleQueueSto);
@@ -37,6 +39,7 @@ int main()
 	/* send object dictionaries for event pools... */
 	QS_OBJ_DICTIONARY(smlPoolSto);
 	QS_OBJ_DICTIONARY(medPoolSto);
+	QS_OBJ_DICTIONARY(largePoolSto);
 
 	/* send signal dictionaries for globally published events... */
 	QS_SIG_DICTIONARY(UART_DATA_BEGIN_SIG, (void *)0);

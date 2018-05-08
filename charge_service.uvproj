@@ -363,7 +363,7 @@
               <MiscControls></MiscControls>
               <Define>HSE_VALUE=4000000 USE_STDPERIPH_DRIVER Q_SPY</Define>
               <Undefine></Undefine>
-              <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qv\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;.\user</IncludePath>
+              <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qv\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;.\user;.\user\common;.\user\xd;.\user\security</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -417,11 +417,6 @@
               <FilePath>.\user\bsp.c</FilePath>
             </File>
             <File>
-              <FileName>fifo.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\user\fifo.c</FilePath>
-            </File>
-            <File>
               <FileName>module.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\user\module.c</FilePath>
@@ -440,6 +435,11 @@
               <FileName>bsp_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\user\bsp_usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>l206.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\l206.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -620,6 +620,51 @@
               <FileName>qstamp.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\QP\include\qstamp.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>common</GroupName>
+          <Files>
+            <File>
+              <FileName>fifo.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\common\fifo.c</FilePath>
+            </File>
+            <File>
+              <FileName>string_tool.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\common\string_tool.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>xd</GroupName>
+          <Files>
+            <File>
+              <FileName>xd_time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\xd\xd_time.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>security</GroupName>
+          <Files>
+            <File>
+              <FileName>aes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\security\aes.c</FilePath>
+            </File>
+            <File>
+              <FileName>base64.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\security\base64.c</FilePath>
+            </File>
+            <File>
+              <FileName>md5.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\security\md5.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -2,8 +2,8 @@
 // Created by YangYongbao on 2017/4/22.
 //
 
-#ifndef FIRMWARE_STRING_TOOL_H
-#define FIRMWARE_STRING_TOOL_H
+#ifndef __STRING_TOOL_H__
+#define __STRING_TOOL_H__
 
 #include "stdint.h"
 
@@ -32,5 +32,15 @@ int compare_version(char *version1, char *version2, int count);
 * @return 0: 是, -1:否
 */
 int is_string(char *buf, uint16_t len);
+
+/**
+* 从字符串中获取数字部分，并转换成对应数值
+* @param buf 字符串
+* @param len 字符串长度
+* @return -1: 无效字符串. >=0: 数值
+* @note 不支持浮点和负数
+*/
+int capture_number(char buf[], uint16_t len);
+
 
 #endif //FIRMWARE_STRING_TOOL_H

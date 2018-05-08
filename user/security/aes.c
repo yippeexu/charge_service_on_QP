@@ -6,8 +6,7 @@
 
 #include <stdint.h>
 #include <string.h> // CBC mode, for memset
-#include "string_tool.h"
-#include "uart_log.h"
+#include <string_tool.h>
 
 /*****************************************************************************/
 /* Defines:                                                                  */
@@ -469,12 +468,12 @@ uint32_t Add_Pkcs(char *p, int len)
 
 int aes128_ecb_encrypt(const uint8_t* input, const uint8_t* key, uint8_t *output)
 {
-    int len = strlen(input);
+    int len = strlen((char *)input);
     int index_max = len / 16 + 1; // 块大小
 
     //debug("aes len:%d", len);
     // pkcs7补码
-    len = Add_Pkcs(input, len);
+    len = Add_Pkcs((char *)input, len);
     //debug("input:%s", input);
     // 分块加密
     for (int index = 0; index < index_max; index++) {

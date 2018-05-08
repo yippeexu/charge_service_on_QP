@@ -87,11 +87,31 @@ int is_string(char *buf, uint16_t len)
 {
 	for (uint16_t index = 0; index < len; index++)
 	{
-		if (!(buf[index] >= '0' && buf[index] <= '9' || buf[index] >= 'a' && buf[index] <= 'z' || buf[index] >= 'A' && buf[index] <= 'Z'))
+		if (!(buf[index] >= '0' && buf[index] <= '9' || buf[index] >= 'a' && buf[index] <= 'z' || buf[index] >= 'A' && buf[index] <= 'Z' || buf[index] == '.' || buf[index] == '_'))
 		{
 			return -1;
 		}
 	}
 
 	return 0;
+}
+
+#define IS_NUMBER(c) ((c >= '0' && c <= '9') ? 1 : 0)
+#define IS_NOT_NUMBER(c) ((c >= '0' && c <= '9') ? 0 : 1)
+
+int capture_number(char buf[], uint16_t len)
+{
+	int i, j, n = 0;
+
+	// 忽略非数字字符
+	for (i = 0; i < len && IS_NOT_NUMBER(buf[i]); i++) {};
+	
+	if (i >= len) return -1;
+
+	// 捕获数字字符
+	for (j = 0; IS_NUMBER(buf[i+j]); j++) {
+		n = 10 * n + (buf[i + j] - '0');
+	}
+		
+	return n;
 }

@@ -35,7 +35,7 @@ void Module_rx_ctor(void)
 	Module_rx *me = &l_module_rx;
 
 	QActive_ctor(&me->super, Q_STATE_CAST(&Module_rx_initial));
-	QTimeEvt_ctorX(&me->pollTimeEvt, &me->super, POLL_TIMEOUT_SIG, 0);
+	QTimeEvt_ctorX(&me->pollTimeEvt, &me->super, POLL_UART_DATA_SIG, 0);
 
 	/* 2G Module FIFO init on USART1*/
 	fifo_init(&receiver_fifo, receiver_fifo_buf, sizeof(receiver_fifo_buf));
@@ -52,7 +52,7 @@ static QState Module_rx_initial(Module_rx * const me, QEvt const * const e)
 	QS_FUN_DICTIONARY(&Module_rx_idle);
 	QS_FUN_DICTIONARY(&Module_rx_polling);
 
-	QS_SIG_DICTIONARY(POLL_TIMEOUT_SIG, me);
+	//QS_SIG_DICTIONARY(POLL_UART_DATA_SIG, me);
 
 	return Q_TRAN(&Module_rx_idle);
 }
@@ -97,19 +97,21 @@ static QState Module_rx_polling(Module_rx * const me, QEvt const * const e)
 		status_ = Q_HANDLED();
 		break;
 	}
-	case POLL_TIMEOUT_SIG: {
+	case POLL_UART_DATA_SIG: {
 		uint32_t len = fifo_len(&receiver_fifo);
+		uint32_t i;
 		Q_ASSERT(len > 0);
 		if (len == me->recv_len_last) {
 			UartDataEvt *pe = Q_NEW(UartDataEvt, UART_DATA_READY_SIG);
 			pe->len = len;
-			for (uint32_t i = 0; i < len; i++) {
+			for (i = 0; i < len; i++) {
 				uint8_t c;
 				uint32_t ret = fifo_out_c(&receiver_fifo, &c);
 				Q_ASSERT(ret == 0);
 				pe->data[i] = c;
 			}
-			debug_str(pe->data);
+			pe->data[i] = '\0';
+			debug_print("[%d]:%s", pe->len, pe->data);
 			QACTIVE_POST(AO_Module, &pe->super, me);
 			status_ = Q_TRAN(&Module_rx_idle);
 		}

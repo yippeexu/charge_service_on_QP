@@ -29,8 +29,18 @@
 
 #define FIFO_MAX_LENGTH	2048U
 
+
+#ifdef Q_SPY
+#define debug_print(fmt, ...)	do{ \
+									_debug_print(fmt, ##__VA_ARGS__); \
+								}while(0)
+#else
+#define debug_print(fmt, ...)
+#endif // QSPY
+
+void set_timestamp(uint64_t stamp);
+uint64_t get_timestamp(void);
+void _debug_print(char *fmt, ...);
 void BSP_init(void);
-void debug_int(uint8_t a);
-void debug_str(char const *str);
 
 #endif

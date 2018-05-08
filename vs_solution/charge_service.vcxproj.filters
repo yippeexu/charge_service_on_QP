@@ -28,6 +28,15 @@
     <Filter Include="QP_port\arm-cm\qv\arm">
       <UniqueIdentifier>{ecd626a6-a199-48b8-905c-b53b8e0dab6e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="user\xd">
+      <UniqueIdentifier>{39e263a2-b5fa-40ac-af50-88402334bc0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="user\common">
+      <UniqueIdentifier>{fda435a1-c427-43cb-904a-8c03ee436fc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="user\secutiry">
+      <UniqueIdentifier>{bedb3c99-32c5-4a41-9d6e-e1a778d33eef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\QP\src\qf\qep_hsm.c">
@@ -168,11 +177,29 @@
     <ClCompile Include="..\user\module.c">
       <Filter>user</Filter>
     </ClCompile>
-    <ClCompile Include="..\user\fifo.c">
-      <Filter>user</Filter>
-    </ClCompile>
     <ClCompile Include="..\user\bsp_usart.c">
       <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\l206.c">
+      <Filter>user</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\common\fifo.c">
+      <Filter>user\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\common\string_tool.c">
+      <Filter>user\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\xd\xd_time.c">
+      <Filter>user\xd</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\security\base64.c">
+      <Filter>user\secutiry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\security\md5.c">
+      <Filter>user\secutiry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\user\security\aes.c">
+      <Filter>user\secutiry</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

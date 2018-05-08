@@ -1,17 +1,4 @@
-#include "qpc.h"
-#include "bsp.h"
-
-#include <system.h>
-
-Q_DEFINE_THIS_MODULE("l206")
-
-
-void xd_capture_timestamp(char buf[], uint16_t len)
-{
-
-}
-
-
+#include "xd_time.h"
 
 uint64_t xd_mktime(uint16_t year, uint8_t mon_a,
 	uint8_t day, uint8_t hour,

@@ -6,50 +6,41 @@
 
 Q_DEFINE_THIS_MODULE("module")
 
-#define  L206_HANDCMD          "AT\r\n"                       // OK
-#define  L206_MODULECMD        "AT+CGMM\r\n"		          // 查询模块型号  L206
-#define  L206_SETBPSCMD        "AT+IPR="                      // 要改变波特率
-#define  L206_CLOSEATE         "ATE0\r\n"                     // 关闭指令回选功能 "AT+CGMR\r\n" //
-#define  L206_SETMUX0CMD       "AT+CIPMUX=0\r\n"              // 单通道   1，多通道模式
-#define  L206_QGSN             "AT+CGSN\r\n"                  // 获取GPRS模块的IMEI码
-#define  L206_EGMR             "AT+EGMR=0,5\r\n"              // 获取sn序列号  +CSNS?
 
-//#define  L206_CNUM            "AT+CNUM?\r\n"                  // 获取手机号
-#define  L206_FINSIMPINCMD     "AT+CPIN?\r\n"                 // 查看sim卡是否解锁      1
-#define  L206_ICCID            "AT+ICCID\r\n"                 // 获取手机号
-#define  L206_FINSIMNETCMD1    "AT+CREG?\r\n"                 // 检查模块是否注册GSM    3
-#define  L206_CGREG            "AT+CGREG?\r\n"                 // 检查模块是否注册GSM    3
-#define  L206_FINGPRSCMD       "AT+CGATT?\r\n"                // 查询 GPRS 是否附着
-#define  L206_CSQCMD           "AT+CSQ\r\n"				      // 信号质量      2
-#define  L206_QLTS             "AT+CCLK?\r\n"				  // 获取区域时间
-//#define  L206_CSTT             "AT+CSTT=\"CMNET\"\r\n"        // 设置APN
-#define  L206_CSTT             "AT+CSTT=\"CMIOT\"\r\n"        // 设置APN
-#define  L206_CIICR            "AT+CIICR\r\n"                 // 激活场景pdp
-#define  L206_GETIPADDRCMD     "AT+CIFSR\r\n"                 // 获取本地ip
-#define  L206_GTPOS            "AT+GTPOS\r\n"                 // 获取经纬度信息
-#define  L206_GTPOS_1          "AT+GTPOS=1\r\n"                 // 获取经纬度信息
-#define  L206_GTPOS_0          "AT+GTPOS=0\r\n"                 // 获取经纬度信息
+#define SM_WANT_TRY_MANY_TIMES(me_, state_, times_)	do { \
+											if ((me_)->was_armed == 0 && (me_)->timeout_count == 0) { \
+												(me_)->was_armed = 1; \
+												status_ = Q_HANDLED(); \
+											} \
+											else if (++(me_)->timeout_count < (times_)) { \
+												status_ = Q_TRAN((state_)); \
+											} \
+											else { \
+												QACTIVE_POST(&(me_)->super, Q_NEW(QEvt, MODULE_RESTART_SIG), (me_)); \
+												status_ = Q_HANDLED(); \
+											} \
+										}while(0)
 
-#define  L206_MIPSTART         "AT+MIPSTART=\"mq.dian.so\",\"1883\"\r\n"    //MQTT
-#define  L206_MCONNECT         "AT+MCONNECT=1,180\r\n"
-#define  L206_MQTTTMOUT        "AT+MQTTTMOUT=200\r\n"                // keepalive 超时时间处理
-#define  L206_MIPCLOSE         "AT+MIPCLOSE\r\n"                    //关闭MQTT
-#define  L206_MDISCONNECT      "AT+MDISCONNECT\r\n"                 //关闭MQTT
-#define  L206_MQTTMSGGET      "AT+MQTTMSGGET=%s\r\n"				// MQTT读取buffer
-#define  L206_CIPSTATUS        "AT+CIPSTATUS\r\n"                   //关闭MQTT
-#define  L206_MQTTSTATU        "AT+MQTTSTATU\r\n"                   // mqtt连接状态查询 0 断开 1 正常 2 tcp连接，mqtt断开
-#define  L206_ISLKVRSCAN       "AT+ISLKVRSCAN\r\n"                  // 获取2G模块软件版本号
-#define  L206_HANDCMD_1        "AT+CSCLK=1\r\n"                     // 进入慢时钟模式
-#define  L206_HANDCMD_0        "AT+CSCLK=0\r\n"                     // 退出慢时钟模式
+#define SM_GOTO_NEXT_STATE(me_, state_)	do { \
+											if ((me_)->was_armed == 0) { \
+												(me_)->was_armed = 1; \
+												status_ = Q_HANDLED(); \
+											} \
+											else { \
+												status_ = Q_TRAN((state_)); \
+											} \
+										}while(0)
 
-#define  L206_HTTPPARA_PORT_80     "AT+HTTPPARA=PORT,80\r\n"      //设置http端口号
-#define  L206_HTTPPARA_PORT_443    "AT+HTTPPARA=PORT,443\r\n"      //设置http端口号
-#define  L206_HTTPPARA_CONNECT     "AT+HTTPPARA=CONNECT,0\r\n"      //设置http端口号
-#define  L206_HTTPSETUP            "AT+HTTPSETUP\r\n"               //建立http连接
-#define  L206_HTTPACTION           "AT+HTTPACTION=0\r\n"            //请求http数据
-#define  L206_HTTPSSL_0            "AT+HTTPSSL=0\r\n"            //请求http数据
-#define  L206_HTTPSSL_1            "AT+HTTPSSL=1\r\n"            //请求http数据
-
+#define SM_GET_ERROR(me_)	do { \
+											if ((me_)->was_armed == 0) { \
+												(me_)->was_armed = 1; \
+												status_ = Q_HANDLED(); \
+											} \
+											else { \
+												QACTIVE_POST(&(me_)->super, Q_NEW(QEvt, MODULE_RESTART_SIG), (me_)); \
+												status_ = Q_HANDLED(); \
+											} \
+										}while(0)
 
 typedef struct {
 	QActive super;
@@ -57,7 +48,24 @@ typedef struct {
 	QTimeEvt delayTimeEvt;
 	QTimeEvt recvDataTimeEvt;
 	uint8_t timeout_count;
+	uint8_t mqtt_conn_timeout_count;
+	uint8_t mqtt_send_timeout_count;
+	uint8_t mqtt_status_timeout_count;
 	uint8_t power_on_step;
+	uint8_t error_code;
+	bool was_armed;
+	bool ctrl_output;
+	bool onoutputing;
+	bool oncharging;
+	uint8_t vol_percent;
+	uint8_t l206_ver_compatible;
+	char serial_num[SN_MAX_LENGTH + 1];
+	char device_id[DEVICEID_MAX_LENGTH + 1];
+	char iccid[ICCID_MAX_LENGTH + 1];
+	uint8_t csq;
+	char latitude[15];
+	char longitude[15];
+
 }Module;
 
 enum STEP {
@@ -71,10 +79,47 @@ enum STEP {
 
 /* protected: */
 static QState Module_initial(Module * const me, QEvt const * const e);
-static QState Module_start(Module * const me, QEvt const * const e);
-static QState Module_power_on(Module * const me, QEvt const * const e);
+static QState Module_on(Module * const me, QEvt const * const e);
+static QState Module_power(Module * const me, QEvt const * const e);
+static QState Module_config(Module * const me, QEvt const * const e);
 static QState Module_hands(Module * const me, QEvt const * const e);
 static QState Module_set_baudrate(Module * const me, QEvt const * const e);
+static QState Module_close_echo(Module * const me, QEvt const * const e);
+static QState Module_check_model(Module * const me, QEvt const * const e);
+static QState Module_check_fm_version(Module * const me, QEvt const * const e);
+static QState Module_get_sn(Module * const me, QEvt const * const e);
+static QState Module_get_imei(Module * const me, QEvt const * const e);
+static QState Module_check_sim_pin(Module * const me, QEvt const * const e);
+static QState Module_network_setup(Module * const me, QEvt const * const e);
+static QState Module_get_csq(Module * const me, QEvt const * const e);
+static QState Module_check_cgreg(Module * const me, QEvt const * const e);
+static QState Module_check_cgatt(Module * const me, QEvt const * const e);
+static QState Module_set_apn(Module * const me, QEvt const * const e);
+static QState Module_active_pdp(Module * const me, QEvt const * const e);
+static QState Module_get_utc_time(Module * const me, QEvt const * const e);
+static QState Module_get_location(Module * const me, QEvt const * const e);
+static QState Module_get_iccid(Module * const me, QEvt const * const e);
+static QState Module_mqtt_connecting(Module * const me, QEvt const * const e);
+static QState Module_set_mqtttmout(Module * const me, QEvt const * const e);
+static QState Module_set_mqttconfig(Module * const me, QEvt const * const e);
+static QState Module_set_mqtt_start(Module * const me, QEvt const * const e);
+static QState Module_mqtt_connect(Module * const me, QEvt const * const e);
+static QState Module_mqtt_sub(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_connected(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_idle(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_busy(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_wait_ack(Module * const me, QEvt const * const e);
+//static QState Module_check_mqtt_status(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_sleep_long(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_sleep_short(Module * const me, QEvt const * const e);
+//static QState Module_mqtt_disconnect(Module * const me, QEvt const * const e);
+//static QState Module_device_active(Module * const me, QEvt const * const e);
+//static QState Module_set_httpssl(Module * const me, QEvt const * const e);
+//static QState Module_set_http_alive(Module * const me, QEvt const * const e);
+//static QState Module_set_http_port(Module * const me, QEvt const * const e);
+//static QState Module_set_http_url(Module * const me, QEvt const * const e);
+//static QState Module_http_setup(Module * const me, QEvt const * const e);
+//static QState Module_http_action(Module * const me, QEvt const * const e);
 
 
 /* Local objects -----------------------------------------------------------*/
@@ -90,6 +135,8 @@ void Module_ctor(void)
 	QActive_ctor(&me->super, Q_STATE_CAST(&Module_initial));
 	QTimeEvt_ctorX(&me->delayTimeEvt, &me->super, DELAY_TIMEOUT_SIG, 0);
 	QTimeEvt_ctorX(&me->recvDataTimeEvt, &me->super, RECV_DATA_TIMEOUT_SIG, 0);
+
+	me->mqtt_conn_timeout_count = 0;
 }
 
 static QState Module_initial(Module * const me, QEvt const * const e)
@@ -103,162 +150,1079 @@ static QState Module_initial(Module * const me, QEvt const * const e)
 	QS_OBJ_DICTIONARY(&l_module.recvDataTimeEvt);
 
 	QS_FUN_DICTIONARY(&Module_initial);
-	QS_FUN_DICTIONARY(&Module_start);
-	QS_FUN_DICTIONARY(&Module_power_on);
+	QS_FUN_DICTIONARY(&Module_on);
+	QS_FUN_DICTIONARY(&Module_power);
+	QS_FUN_DICTIONARY(&Module_config);
 	QS_FUN_DICTIONARY(&Module_hands);
 	QS_FUN_DICTIONARY(&Module_set_baudrate);
+	QS_FUN_DICTIONARY(&Module_close_echo);
+	QS_FUN_DICTIONARY(&Module_check_model);
+	QS_FUN_DICTIONARY(&Module_check_fm_version);
+	QS_FUN_DICTIONARY(&Module_get_sn);
+	QS_FUN_DICTIONARY(&Module_get_imei);
+	QS_FUN_DICTIONARY(&Module_check_sim_pin);
+	QS_FUN_DICTIONARY(&Module_network_setup);
+	QS_FUN_DICTIONARY(&Module_get_csq);
+	QS_FUN_DICTIONARY(&Module_check_cgreg);
+	QS_FUN_DICTIONARY(&Module_check_cgatt);
+	QS_FUN_DICTIONARY(&Module_set_apn);
+	QS_FUN_DICTIONARY(&Module_active_pdp);
+	QS_FUN_DICTIONARY(&Module_get_utc_time);
+	QS_FUN_DICTIONARY(&Module_get_location);
+	QS_FUN_DICTIONARY(&Module_get_iccid);
+	QS_FUN_DICTIONARY(&Module_mqtt_connecting);
+	QS_FUN_DICTIONARY(&Module_set_mqtttmout);
+	QS_FUN_DICTIONARY(&Module_set_mqttconfig);
+	QS_FUN_DICTIONARY(&Module_set_mqtt_start);
+	QS_FUN_DICTIONARY(&Module_mqtt_connect);
+	QS_FUN_DICTIONARY(&Module_mqtt_sub);
 
 	QS_SIG_DICTIONARY(DELAY_TIMEOUT_SIG, me);
 	QS_SIG_DICTIONARY(RECV_DATA_TIMEOUT_SIG, me);
+	QS_SIG_DICTIONARY(CTRL_OUTPUT_SIG, me);
+	QS_SIG_DICTIONARY(NETWORK_ERROR_SIG, me);
+	QS_SIG_DICTIONARY(MODULE_RESTART_SIG, me);
+	QS_SIG_DICTIONARY(MQTT_STATUS_CHECK_SIG, me);
+	QS_SIG_DICTIONARY(OPEN_SERVICE_START_SIG, me);
 
-	return Q_TRAN(&Module_start);
+
+	return Q_TRAN(&Module_power);
 }
 
-static QState Module_start(Module * const me, QEvt const * const e)
+
+static QState Module_on(Module * const me, QEvt const * const e)
 {
 	QState status_;
 	switch (e->sig) {
-		case Q_INIT_SIG: {
-			status_ = Q_TRAN(&Module_power_on);
-			break;
-		}
-		default: {
-			status_ = Q_SUPER(&QHsm_top);
-			break;
-		}
+	case Q_INIT_SIG: {
+		status_ = Q_TRAN(&Module_power);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&QHsm_top);
+		break;
+	}
 	}
 	return status_;
 }
-
-static QState Module_power_on(Module * const me, QEvt const * const e)
+static QState Module_power(Module * const me, QEvt const * const e)
 {
 	QState status_;
 	switch (e->sig) {
-		case Q_ENTRY_SIG: {
-			QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 1, 0U);
-			me->power_on_step = STEP_1;
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 1, 0U);
+		me->power_on_step = STEP_1;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		QTimeEvt_disarm(&me->delayTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case DELAY_TIMEOUT_SIG: {
+		debug_print("power_on_step = %d", me->power_on_step);
+		switch (me->power_on_step)
+		{
+		case STEP_1: {
+			L206_PWRKEY_LOW();
+			QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC, 0U);
+			me->power_on_step++;
 			status_ = Q_HANDLED();
 			break;
 		}
-		case Q_EXIT_SIG: {
-			QTimeEvt_disarm(&me->delayTimeEvt);
+		case STEP_2: {
+			L206_PWRKEY_HIGH();
+			QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC, 0U);
+			me->power_on_step++;
 			status_ = Q_HANDLED();
 			break;
 		}
-		case DELAY_TIMEOUT_SIG: {
-			debug_int(me->power_on_step);
+		case STEP_3: {
+			L206_PWRKEY_LOW();
+			QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+			me->power_on_step++;
 			status_ = Q_HANDLED();
-			switch (me->power_on_step)
-			{
-				case STEP_1: {
-					L206_PWRKEY_LOW();
-					QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC, 0U);
-					me->power_on_step++;
-					status_ = Q_HANDLED();
-					break;
-				}
-				case STEP_2: {
-					L206_PWRKEY_HIGH();
-					QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC, 0U);
-					me->power_on_step++;
-					status_ = Q_HANDLED();
-					break;
-				}
-				case STEP_3: {
-					L206_PWRKEY_LOW();
-					QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
-					me->power_on_step++;
-					status_ = Q_HANDLED();
-					break;
-				}
-				case STEP_4: {
-					L206_PWRKEY_HIGH();
-					QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 3, 0U);
-					me->power_on_step++;
-					status_ = Q_HANDLED();
-					break;
-				}
-				case STEP_5: {
-					status_ = Q_TRAN(&Module_hands);
-					break;
-				}
-			}
 			break;
 		}
-		default: {
-			status_ = Q_SUPER(&Module_start);
+		case STEP_4: {
+			L206_PWRKEY_HIGH();
+			QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 3, 0U);
+			me->power_on_step++;
+			status_ = Q_HANDLED();
 			break;
 		}
+		case STEP_5: {
+			status_ = Q_TRAN(&Module_hands);
+			break;
+		}
+		}
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
 	}
 	return status_;
 }
-
+static QState Module_config(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		me->error_code = HAND_ERROR;
+		me->was_armed = 1;
+		me->timeout_count = 0;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_INIT_SIG: {
+		status_ = Q_TRAN(&Module_hands);
+		break;
+	}
+	case MODULE_RESTART_SIG: {
+		// TODO
+		//QACTIVE_POST(AO_DISPLAY, NETWORK_ERROR_SIG, error_code);
+		status_ = Q_TRAN(&Module_power);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
 static QState Module_hands(Module * const me, QEvt const * const e)
 {
 	QState status_;
 	switch (e->sig) {
-		case Q_ENTRY_SIG: {
-			QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC, BSP_TICKS_PER_SEC);
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 1, 0U);
+		BSP_usart1_tx_buffer(L206_HANDCMD, sizeof(L206_HANDCMD));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "AT");
+		if (p) {
 			me->timeout_count = 0;
-			BSP_usart1_tx_buffer(L206_HANDCMD, sizeof(L206_HANDCMD));
+			status_ = Q_TRAN(&Module_set_baudrate);
+		}
+		else {
 			status_ = Q_HANDLED();
-			break;
 		}
-		case Q_EXIT_SIG: {
-			QTimeEvt_disarm(&me->recvDataTimeEvt);
-			status_ = Q_HANDLED();
-			break;
-		}
-		case RECV_DATA_TIMEOUT_SIG: {
-			me->timeout_count++;
-			if(me->timeout_count < 10)
-			{ 
-				BSP_usart1_tx_buffer(L206_HANDCMD, sizeof(L206_HANDCMD));
-				status_ = Q_HANDLED();
-			}
-			else
-			{
-				status_ = Q_TRAN(&Module_start);
-			}
-			break;
-		}
-		case UART_DATA_READY_SIG: {
-			Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
-			char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "AT");
-			if (p != NULL) {
-				status_ = Q_TRAN(&Module_set_baudrate);
-			}
-			else
-			{
-				status_ = Q_HANDLED();
-			}
-			break;
-		}
-		default: {
-			status_ = Q_SUPER(&Module_start);
-			break;
-		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {		
+		//debug_print("was_armed = %d, timeout_count = %d", me->was_armed, me->timeout_count);
+		SM_WANT_TRY_MANY_TIMES(me, &Module_hands, 10);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
 	}
 	return status_;
 }
-
 static QState Module_set_baudrate(Module * const me, QEvt const * const e)
 {
 	QState status_;
-
 	switch (e->sig) {
-		case Q_ENTRY_SIG: {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		BSP_usart1_tx_buffer(L206_BAUDRATE_115200, sizeof(L206_BAUDRATE_115200));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "OK");
+		if (p) {
+			me->timeout_count = 0;
+			status_ = Q_TRAN(&Module_close_echo);
+		}
+		else {
 			status_ = Q_HANDLED();
-			break;
 		}
-		case Q_EXIT_SIG: {
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_set_baudrate, 3);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_close_echo(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 3, 0U);
+		BSP_usart1_tx_buffer(L206_CLOSEATE, sizeof(L206_CLOSEATE));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "ATE0");
+		if (p) {
+			me->timeout_count = 0;
+			status_ = Q_TRAN(&Module_check_model);
+		}
+		else {
 			status_ = Q_HANDLED();
-			break;
 		}
-		default: {
-			status_ = Q_SUPER(&Module_start);
-			break;
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_close_echo, 3);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_check_model(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 4, 0U);
+		BSP_usart1_tx_buffer(L206_MODULE_MODEL, sizeof(L206_MODULE_MODEL));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "L206\r\n\r\nOK");
+		if (p) {
+			me->timeout_count = 0;
+			status_ = Q_TRAN(&Module_check_fm_version);
 		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_check_model, 3);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_check_fm_version(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		BSP_usart1_tx_buffer(L206_ISLKVRSCAN, sizeof(L206_ISLKVRSCAN));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+ISLKVRSCAN: ");
+		if (p) {
+			p += strlen("+ISLKVRSCAN: ");
+			int ret = is_string(p, 16);
+			if (ret == 0) {
+				if (strstr(p, "L206v01.01b14.05")) {
+					me->l206_ver_compatible = 1;
+				}
+				else if (strstr(p, "L206v01.01b14.00")) {
+					me->l206_ver_compatible = 0;
+				}
+				else {
+					me->l206_ver_compatible = 0;
+				}
+
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_get_sn);
+			}
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_check_fm_version, 3);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_get_sn(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 5, 0U);
+		memset(me->serial_num, '\0', sizeof(me->serial_num));
+		BSP_usart1_tx_buffer(L206_EGMR, sizeof(L206_EGMR));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+EGMR: \"");
+		if (p) {
+			p += strlen("+EGMR: \"");
+			int ret = is_string(p, SN_MAX_LENGTH);
+			if (ret == 0) {
+				strncpy(me->serial_num, p, SN_MAX_LENGTH);
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_get_imei);
+			}
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_get_sn, 5);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_get_imei(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 5, 0U);
+		memset(me->device_id, '\0', sizeof(me->device_id));
+		strncpy(me->device_id, DEVICEID_HEAD, DEVICEID_HEAD_LENGTH);
+		BSP_usart1_tx_buffer(L206_QGSN, sizeof(L206_QGSN));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "\r\n");
+		if (p) {
+			p += strlen("\r\n");
+			int ret = is_string(p, IMEI_MAX_LENGTH);
+			if (ret == 0) {
+				strncpy(&me->device_id[DEVICEID_HEAD_LENGTH], p, DEVICEID_HEAD_LENGTH);
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_check_sim_pin);
+			}
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_get_imei, 5);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_config);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_check_sim_pin(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 3, 0U);
+		BSP_usart1_tx_buffer(L206_FINSIMPINCMD, sizeof(L206_FINSIMPINCMD));
+		me->error_code = CARDPIN_ERROR;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+CPIN: ");
+		if (p) {
+			p += strlen("+CPIN: ");
+			if (strstr(p, "READY") != NULL) {    // PIN码已解除
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_get_csq);
+			}				
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_check_sim_pin, 8);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_network_setup(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		me->error_code = NETWORK_ERROR;
+		me->timeout_count = 0;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_INIT_SIG: {
+		status_ = Q_TRAN(Module_get_csq);
+		break;
+	}
+	case MODULE_RESTART_SIG: {
+		// TODO
+		//QACTIVE_POST(AO_DISPLAY, NETWORK_ERROR_SIG, error_code);
+		status_ = Q_TRAN(&Module_power);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_get_csq(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC, 0U);
+		me->csq = 0;
+		BSP_usart1_tx_buffer(L206_CSQ, sizeof(L206_CSQ));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+CSQ: ");
+		if (p) {
+			p += strlen("+CSQ: ");
+			int csq = capture_number(p, strlen(p));
+			if(csq > 0 && csq < 32) { // csq取值范围为0-31
+				me->csq = (csq * 100 / 32);	// 转化为百分比
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_check_cgreg);
+			}
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_get_csq, 20);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_network_setup);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_check_cgreg(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 1, 0U);
+		BSP_usart1_tx_buffer(L206_CGREG, sizeof(L206_CGREG));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+CGREG: ");
+		if (p) {
+			p += strlen("+CGREG: ");
+			if (strstr(p, "0,1") != NULL || strstr(p, "0,5") != NULL) {    // 基站注册成功
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_check_cgatt);
+			}
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_check_cgreg, 40);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_network_setup);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_check_cgatt(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		BSP_usart1_tx_buffer(L206_CGATT, sizeof(L206_CGATT));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+CGATT: 1"); // GPRS附着成功
+		if (p) {
+			me->timeout_count = 0;
+			status_ = Q_TRAN(&Module_set_apn);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_check_cgatt, 40);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_network_setup);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_set_apn(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 5, 0U);
+		BSP_usart1_tx_buffer(L206_CSTT, sizeof(L206_CSTT));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "OK");
+		if (p) {
+			me->timeout_count = 0;
+			status_ = Q_TRAN(&Module_active_pdp);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_set_apn, 3);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_network_setup);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_active_pdp(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		BSP_usart1_tx_buffer(L206_CIICR, sizeof(L206_CIICR));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "OK");
+		if (p) {
+			me->timeout_count = 0;
+			status_ = Q_TRAN(&Module_get_utc_time);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_active_pdp, 30);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_network_setup);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_get_utc_time(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		BSP_usart1_tx_buffer(L206_CCLK, sizeof(L206_CCLK));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+CCLK: \"");
+		if (p) {
+			p += strlen("+CCLK: \"");
+			debug_print("timestamp1 = %d", get_timestamp());
+			parse_utc_time(p, strlen(p));
+			debug_print("timestamp2 = %d", get_timestamp());
+			status_ = Q_TRAN(&Module_get_location);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GOTO_NEXT_STATE(me, &Module_get_location);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_get_location(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 4, 0U);
+		BSP_usart1_tx_buffer(L206_GTPOS, sizeof(L206_GTPOS));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+GTPOS: ");
+		if (p) { // 第二次获取最好延时时间间隔大于2分钟  返回-2 访问基站地经纬度太频繁
+			p += strlen("+GTPOS: ");
+			parse_lati_longi(p, strlen(p), me->latitude, me->longitude); 
+			debug_print("lati: %s, longi: %s", me->latitude, me->longitude);
+			status_ = Q_TRAN(&Module_get_iccid);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GOTO_NEXT_STATE(me, &Module_get_iccid);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_get_iccid(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 3, 0U);
+		me->error_code = NETWORK_ERROR;
+		memset(me->iccid, '\0', sizeof(me->iccid));
+		BSP_usart1_tx_buffer(L206_ICCID, sizeof(L206_ICCID));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+ICCID: ");
+		if (p) {
+			p += strlen("+ICCID: ");
+			int ret = is_string(p, ICCID_MAX_LENGTH);
+			if (ret == 0) {
+				strncpy(me->iccid, p, DEVICEID_HEAD_LENGTH);
+				me->timeout_count = 0;
+				status_ = Q_TRAN(&Module_mqtt_connecting);
+			}
+			else {
+				status_ = Q_HANDLED();
+			}
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_WANT_TRY_MANY_TIMES(me, &Module_get_iccid, 5);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_connecting(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		me->error_code = MQTT_CONN_ERROR;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_INIT_SIG: {
+		if (me->l206_ver_compatible == 1) { // 新版本固件才有AT+MQTTTMOUT指令
+			status_ = Q_TRAN(Module_set_mqtttmout);
+		}
+		else
+		{ 
+			status_ = Q_TRAN(Module_set_mqttconfig);
+		}
+		break;
+	}
+	case MODULE_RESTART_SIG: {
+		// TODO
+		//QACTIVE_POST(AO_DISPLAY, NETWORK_ERROR_SIG, error_code);
+		status_ = Q_TRAN(&Module_power);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_set_mqtttmout(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		BSP_usart1_tx_buffer(L206_MQTTTMOUT, sizeof(L206_MQTTTMOUT));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "OK");
+		if (p) {
+			status_ = Q_TRAN(&Module_set_mqttconfig);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GET_ERROR(me);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connecting);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_set_mqttconfig(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		char at_mconfig_buf[100];
+		memset(at_mconfig_buf, 0, sizeof(at_mconfig_buf));
+		mqtt_set_config(at_mconfig_buf, me->device_id, me->serial_num, me->iccid);
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 5, 0U);
+		BSP_usart1_tx_buffer((uint8_t *)at_mconfig_buf, strlen(at_mconfig_buf));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "OK");
+		if (p) {
+			status_ = Q_TRAN(&Module_set_mqtt_start);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GET_ERROR(me);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connecting);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_set_mqtt_start(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 10, 0U);
+		BSP_usart1_tx_buffer(L206_MIPSTART, sizeof(L206_MIPSTART));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "CONNECT OK");
+		if (p) {
+			status_ = Q_TRAN(&Module_mqtt_connect);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GET_ERROR(me);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connecting);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_connect(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 15, 0U);
+		BSP_usart1_tx_buffer(L206_MCONNECT, sizeof(L206_MCONNECT));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "CONNECT OK");
+		if (p) {
+			status_ = Q_TRAN(&Module_mqtt_sub);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GET_ERROR(me);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connecting);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_sub(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		char at_msub_buf[100];
+		memset(at_msub_buf, 0, sizeof(at_msub_buf));
+		mqtt_set_sub(at_msub_buf, me->device_id);
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 10, 0U);
+		BSP_usart1_tx_buffer((uint8_t *)at_msub_buf, strlen(at_msub_buf));
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "SUBACK");
+		if (p) {
+			status_ = Q_TRAN(&Module_mqtt_connected);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		SM_GET_ERROR(me);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connecting);
+		break;
+	}
 	}
 	return status_;
 }
