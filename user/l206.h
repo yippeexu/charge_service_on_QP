@@ -34,19 +34,20 @@
 #define  L206_HANDCMD_1        "AT+CSCLK=1\r\n"                     // 进入慢时钟模式
 #define  L206_HANDCMD_0        "AT+CSCLK=0\r\n"                     // 退出慢时钟模式
 
-#define  L206_HTTPPARA_PORT_80     "AT+HTTPPARA=PORT,80\r\n"      //设置http端口号
-#define  L206_HTTPPARA_PORT_443    "AT+HTTPPARA=PORT,443\r\n"      //设置http端口号
-#define  L206_HTTPPARA_CONNECT     "AT+HTTPPARA=CONNECT,0\r\n"      //设置http端口号
+#define  L206_HTTPPARA_URL         "AT+HTTPPARA=URL,\""				//设置http url
+#define  L206_HTTPPARA_PORT_80     "AT+HTTPPARA=PORT,80\r\n"		//设置http端口号
+#define  L206_HTTPPARA_PORT_443    "AT+HTTPPARA=PORT,443\r\n"		//设置http端口号
+#define  L206_HTTPPARA_CONNECT     "AT+HTTPPARA=CONNECT,0\r\n"      //设置http连接方式为短连接
 #define  L206_HTTPSETUP            "AT+HTTPSETUP\r\n"               //建立http连接
 #define  L206_HTTPACTION           "AT+HTTPACTION=0\r\n"            //请求http数据
-#define  L206_HTTPSSL_0            "AT+HTTPSSL=0\r\n"            //请求http数据
-#define  L206_HTTPSSL_1            "AT+HTTPSSL=1\r\n"            //请求http数据
+#define  L206_HTTPSSL_0            "AT+HTTPSSL=0\r\n"            //请求http数据，不启用SSL
+#define  L206_HTTPSSL_1            "AT+HTTPSSL=1\r\n"            //请求http数据，启用SSL
 
 /* 解析utc时间 */
 int parse_utc_time(char buf[], uint16_t len);
 
 /* 解析经纬度 */
-int parse_lati_longi(char buf[], uint16_t len, char *lati_str, char *logi_str);
+int parse_longi_lati(char buf[], uint16_t len, char *longi_str, char *lati_str);
 
 /* 设置AT+MCONFIG的client_id, username, password */
 int mqtt_set_config(char buf[], char *device_id, char *serial_num, char *iccid);

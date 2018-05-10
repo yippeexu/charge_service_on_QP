@@ -16,6 +16,7 @@ int main()
 	static QEvt const *moduleQueueSto[4];
 	static QEvt const *moduleRxQueueSto[3];
 
+	// TODO: QEvt类型不可行，选择合适事件类型给smlPoolSto
 	static QF_MPOOL_EL(QEvt)				smlPoolSto[10];
 	static QF_MPOOL_EL(UartDataEvt)			medPoolSto[4];
 	static QF_MPOOL_EL(largeUartDataEvt)	largePoolSto[2];

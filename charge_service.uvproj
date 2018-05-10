@@ -361,7 +361,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>HSE_VALUE=4000000 USE_STDPERIPH_DRIVER Q_SPY</Define>
+              <Define>HSE_VALUE=4000000 USE_STDPERIPH_DRIVER Q_SPY STM32F10X</Define>
               <Undefine></Undefine>
               <IncludePath>.\CMSIS\4.2.0\CMSIS\Include;.\QP\include;.\QP\src;.\QP_port\arm-cm\qv\arm;.\STM32F1xx_DFP\2.0.0\Device\Include;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\inc;.\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\templates;.\user;.\user\common;.\user\xd;.\user\security</IncludePath>
             </VariousControls>
@@ -378,7 +378,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>Stack_Size=1024 Heap_Size=16</Define>
+              <Define>Stack_Size=1024 Heap_Size=4096</Define>
               <Undefine></Undefine>
               <IncludePath></IncludePath>
             </VariousControls>
@@ -440,6 +440,11 @@
               <FileName>l206.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\user\l206.c</FilePath>
+            </File>
+            <File>
+              <FileName>http.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\http.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -636,6 +641,11 @@
               <FileType>1</FileType>
               <FilePath>.\user\common\string_tool.c</FilePath>
             </File>
+            <File>
+              <FileName>cJSON.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\common\cJSON.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -645,6 +655,11 @@
               <FileName>xd_time.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\user\xd\xd_time.c</FilePath>
+            </File>
+            <File>
+              <FileName>xd_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\xd\xd_flash.c</FilePath>
             </File>
           </Files>
         </Group>

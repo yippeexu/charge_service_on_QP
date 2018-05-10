@@ -76,7 +76,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>__CC_ARM;HSE_VALUE=4000000;USE_STDPERIPH_DRIVER;Q_SPY</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__CC_ARM;HSE_VALUE=4000000;USE_STDPERIPH_DRIVER;STM32F10X;Q_SPY</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

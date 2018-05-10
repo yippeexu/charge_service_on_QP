@@ -1,16 +1,15 @@
 #include "qpc.h"
 #include "bsp.h"
 
+#include "l206.h"
 #include <system.h>
-
-Q_DEFINE_THIS_MODULE("l206")
 
 
 int parse_utc_time(char buf[], uint16_t len)
 {
 	uint32_t i, j;
 	uint8_t time_statue = 0;
-	CP56TIME2A_T time;
+	CP56TIME2A_T time = { 0 };
 	char *pdata = buf;
 	char str[5] = { 0 };
 
@@ -98,7 +97,7 @@ int parse_utc_time(char buf[], uint16_t len)
 				time_statue = 5;
 				time.sec = atoi(str);
 				memset(str, 0x00, sizeof(str));
-				if (time.year >= 2000 && time.month >= 0 && time.month <= 12 && time.day <= 31
+				if (time.year >= 2000&& time.month <= 12 && time.day <= 31
 					&& time.hour <= 24 && time.minute <= 60 && time.sec <= 60)
 				{
 					set_timestamp(xd_mktime(time.year, time.month, time.day, time.hour, time.minute, time.sec));
@@ -115,22 +114,22 @@ int parse_utc_time(char buf[], uint16_t len)
 	return XD_ERROR_INTERNAL;
 }
 
-int parse_lati_longi(char buf[], uint16_t len, char *lati_str, char *logi_str)
+int parse_longi_lati(char buf[], uint16_t len, char *longi_str, char *lati_str)
 {
-	uint16_t lati_len, longi_len;
+	uint16_t longi_len, lati_len;
 
 	if (buf == NULL || len < 20)
 		return XD_ERROR_INTERNAL;
 
-	lati_len = strcspn(buf, ",");
-	if (lati_len > 0)
-	{
-		strncpy(lati_str, buf, lati_len);
-	}
-	longi_len = strcspn(buf + lati_len + 1, ",");
+	longi_len = strcspn(buf, ",");
 	if (longi_len > 0)
 	{
-		strncpy(logi_str, buf + lati_len + 1, longi_len);
+		strncpy(longi_str, buf, longi_len);
+	}
+	lati_len = strcspn(buf + longi_len + 1, ",");
+	if (lati_len > 0)
+	{
+		strncpy(lati_str, buf + longi_len + 1, lati_len);
 	}
 	
 	return XD_SUCCESS;
@@ -153,7 +152,7 @@ int mqtt_set_config(char buf[], char *device_id, char *serial_num, char *iccid)
 	strncpy(&temp[strlen(temp)], serial_num, SN_MAX_LENGTH);
 	strncpy(&temp[strlen(temp)], iccid, ICCID_MAX_LENGTH);
 
-	get_md5_32_str(temp, strlen(temp), md5_buf);
+	get_md5_32_str((uint8_t *)temp, strlen(temp), (uint8_t *)md5_buf);
 
 	debug_print("temp:%s", temp);
 	debug_print("md5_buf:%s", md5_buf);

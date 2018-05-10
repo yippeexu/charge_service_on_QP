@@ -1,33 +1,28 @@
-//
-// Created by YangYongbao on 2017/3/23.
-//
-
-#include "flash.h"
-#include "system.h"
-#include "uart_log.h"
+#include <stm32f10x.h>  /* CMSIS-compliant header file for the MCU used */
+#include <system.h>
+#include "xd_flash.h"
 
 
 #define CONFIG_INFO_ADDRESS        0x00803F000      //sec_key, cell num, crc
 #define FIRMWARE_INFO_ADDRESS      0x00803F800      //固件信息
 
+void erase_config_flash(uint32_t address);
+int write_flash(uint32_t *flash_address, uint32_t* data, uint32_t data_length, uint32_t flash_end_address);
+void read_flash(uint32_t addr, uint8_t *pBuffer, uint16_t dataLen);
 
 
 // 存储配置信息
-int set_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len)
+int set_config(CONFIG_KEY config_name, char *value, uint32_t len)
 {
-#if 1
-
-    FLASH_Status flash_status;
     uint32_t address;
-    INT8U buf[512] = {0};
-    INT8U temp[33] = {0};
-    INT16U save_len = 0;
+    uint8_t buf[512] = {0};
+    uint8_t temp[33] = {0};
+    uint16_t save_len = 0;
     PARAM_DATA *pdata = NULL;
 
     if (value == NULL || len == 0 || len > 1024)
     {
-
-        Sleep(50);
+		//Sleep(50);
         return -1;
     }
 
@@ -46,10 +41,10 @@ int set_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len)
 
     } else
     {
-        Sleep(50);
+		//Sleep(50);
         return -1;
     }
-    INT8U cnt;
+    uint8_t cnt;
     cnt = 5;
     do{
         // 存flash前先读取flash内的数据
@@ -63,29 +58,24 @@ int set_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len)
             case APP_CONFIG:
             {
                 pdata->app_config = *value;
-                debug("config:%d", pdata->app_config);
             }break;
             case SEC_KEY:
             {
                 memcpy( pdata->sec_key, value, len);
-                debug("sec key");
             }break;
             case ICCID:
             {
                 memcpy( pdata->iccid, value, len);
-                debug("iccid");
             }break;
             case ACTIVE_FLAG:
             {
                 pdata->active_flag = *value;
-                debug( "active_flag:%d", buf[37]);
             }break;
                 /////////////////////////
             case UPDATE_FLAG:
             case FIRMWARE_INFO:
             {
                 memcpy( buf, value, len);
-                debug("firmware info");
             }break;
             default:
                 return -1;
@@ -102,12 +92,12 @@ int set_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len)
             memcpy( &buf[sizeof(UPDATE_STRUCT) - 8], temp, 8);
         }
 //        debug("buf:%s",buf);
-        Sleep(10);
+        //Sleep(10);
         if(write_flash( &address, (uint32_t *)buf, save_len, address + save_len))
         {
-            Sleep(50);
+            //Sleep(50);
             cnt--;
-            debug("write flash fail 4");
+            //debug("write flash fail 4");
             if(cnt == 0)
             {
                 return -1;
@@ -115,105 +105,19 @@ int set_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len)
             continue;
         } else
         {
-            debug("write flash ok");
+            //debug("write flash ok");
             return 0;
         }
     }while(cnt);
 
     return 0;
-#else
-
-    FLASH_Status flash_status;
-    uint32_t address;
-    INT8U buf[512] = {0};
-
-    INT16U save_len = 0;
-
-
-    if (value == NULL || len == 0 || len > 1024)
-        return -1;
-
-    memset( buf, 0x00, sizeof(buf));
-
-    if( config_name == APP_CONFIG || config_name == SEC_KEY || \
-        config_name == ICCID   || config_name == ACTIVE_FLAG )
-    {
-
-        address = CONFIG_INFO_ADDRESS;
-        save_len = sizeof(PARAM_DATA);
-    }
-    else if( config_name == UPDATE_FLAG || config_name == FIRMWARE_INFO)
-    {
-
-        address = FIRMWARE_INFO_ADDRESS;
-        save_len = sizeof(UPDATE_STRUCT);
-
-    } else
-    {
-        return -1;
-    }
-    // 存flash前先读取flash内的数据
-    read_flash( address, buf, sizeof(buf));
-//    for(int i = 0 ; i  < 125 ; i++)
-//        debug("address buf:%d", buf[i]);
-
-
-    switch (config_name) {
-        case APP_CONFIG:
-        {
-            PARAM_DATA *pdata;
-            pdata = (PARAM_DATA *)buf;
-            pdata->app_config = *value;
-            debug("config:%d", pdata->app_config);
-          }break;
-        case SEC_KEY:
-        {
-            PARAM_DATA *pdata;
-            pdata = (PARAM_DATA *)buf;
-            memcpy( pdata->sec_key, value, len);
-            debug("sec key");
-        }break;
-        case ICCID:
-        {
-            PARAM_DATA *pdata;
-            pdata = (PARAM_DATA *)buf;
-            memcpy( pdata->iccid, value, len);
-            debug("cell num");
-        }break;
-        case ACTIVE_FLAG:
-        {
-            PARAM_DATA *pdata;
-            pdata = (PARAM_DATA *)buf;
-            pdata->active_flag = *value;
-            debug( "active_flag:%d", buf[37]);
-        }break;
-            /////////////////////////
-        case UPDATE_FLAG:
-        case FIRMWARE_INFO:
-        {
-            memcpy( buf, value, len);
-            debug("firmware info");
-        }break;
-        default:
-            return -1;
-    }
-
-    if(write_flash( &address, (uint32_t *)buf, sizeof(buf), address + sizeof(buf)))
-    {
-        return -1;
-    }
-
-    return 0;
-#endif  //
 }
 
 // 获取配置信息
-int get_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len)
+int get_config(CONFIG_KEY config_name, char *value, uint32_t len)
 {
-
-    INT8U k;
     uint32_t address;
-    INT8U buf[512] = {0};
+    uint8_t buf[512] = {0};
     PARAM_DATA *pdata;
 
     memset( buf, 0x00, sizeof(buf));
@@ -280,15 +184,14 @@ int write_flash( uint32_t* flash_address, uint32_t* data, uint32_t data_length, 
 
     __IO FLASH_Status FLASHStatus = FLASH_COMPLETE;
 
-//    debug("test");
     FLASH_Unlock();
     //FLASH_OB_Unlock();
     FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPRTERR);
-    debug("write flash:%d", *flash_address);
+    //debug("write flash:%d", *flash_address);
     // 若是写入1k的字节开始，擦除1k的数据
     if ( *flash_address % FLASH_PAGE_SIZE == 0 ) {
         FLASHStatus = FLASH_ErasePage( *flash_address);
-        debug("erase page");
+        //debug("erase page");
     }
 
     for (index = 0; (index < data_length) && (*flash_address <= (flash_end_address - 4)) && (FLASHStatus == FLASH_COMPLETE); index++) {
@@ -325,11 +228,11 @@ int write_flash( uint32_t* flash_address, uint32_t* data, uint32_t data_length, 
     FLASH_Unlock();
     //FLASH_OB_Unlock();
     FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_PGERR | FLASH_FLAG_WRPERR);
-    debug("write flash:%d", *flash_address);
+    /*debug*/("write flash:%d", *flash_address);
     // 若是写入1k的字节开始，擦除1k的数据
     if ( *flash_address % FLASH_PAGE_SIZE == 0 ) {
         FLASHStatus = FLASH_ErasePage( *flash_address);
-        debug("erase page");
+        /*debug*/("erase page");
     }
 
     for (index = 0; (index < data_length) && (*flash_address <= (flash_end_address - 4)) && (FLASHStatus == FLASH_COMPLETE); index++) {
@@ -360,7 +263,7 @@ int write_flash( uint32_t* flash_address, uint32_t* data, uint32_t data_length, 
 }
 
 // 读取16位的flash数据
-INT16U flash_readhalfword(uint32_t addr)
+uint16_t flash_readhalfword(uint32_t addr)
 {
     return *(volatile uint32_t*)addr;
 }
@@ -370,9 +273,9 @@ uint32_t flash_readword(uint32_t addr)
     return *(volatile uint32_t*)addr;
 }
 // 读flash存储信息
-void read_flash(uint32_t addr,INT8U *pBuffer,INT16U dataLen)
+void read_flash(uint32_t addr,uint8_t *pBuffer,uint16_t dataLen)
 {
-    INT16U i;
+    uint16_t i;
     uint32_t data;
 
     for(i=0; i<dataLen; )

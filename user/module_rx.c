@@ -52,7 +52,7 @@ static QState Module_rx_initial(Module_rx * const me, QEvt const * const e)
 	QS_FUN_DICTIONARY(&Module_rx_idle);
 	QS_FUN_DICTIONARY(&Module_rx_polling);
 
-	//QS_SIG_DICTIONARY(POLL_UART_DATA_SIG, me);
+	QS_SIG_DICTIONARY(POLL_UART_DATA_SIG, me);
 
 	return Q_TRAN(&Module_rx_idle);
 }

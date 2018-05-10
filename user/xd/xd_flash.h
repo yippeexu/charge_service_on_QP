@@ -1,11 +1,6 @@
-//
-// Created by YangYongbao on 2017/3/23.
-//
+#ifndef __XD_FLASH_H__
+#define __XD_FLASH_H__
 
-#ifndef FW_STM32_1S_FLASH_H
-#define FW_STM32_1S_FLASH_H
-
-#include "system.h"
 
 #define APPLICATION_RUN_ADDRESS     0x008008000
 #define APPLICATION_ISP_ADDRESS     0x008022000
@@ -13,23 +8,23 @@
 #define FLASH_PAGE_SIZE             2048        //1024       // flash页大小
 
 //需要存储的读取校验
-__packed typedef struct _ST_PARAM_DATA{
-    INT8U app_config;             // 获取app配置信息
-    INT8U sec_key[16];            // 服务器获取的加密数据
-    INT8U iccid[20];              // 产品序列号
-    INT8U active_flag;            // 激活标志位
-    INT8U md5[8];                 // MD5前8位作为存储校验
+typedef struct _ST_PARAM_DATA{
+    uint8_t app_config;             // 获取app配置信息
+    uint8_t sec_key[16];            // 服务器获取的加密数据
+    uint8_t iccid[20];              // 产品序列号
+    uint8_t active_flag;            // 激活标志位
+    uint8_t md5[8];                 // MD5前8位作为存储校验
 }PARAM_DATA;
 
 typedef struct UPDATE_STRUCT
 {
-    INT8U       app_config;             //
-    INT8U       update_flag;            // 升级标志位
+    uint8_t       app_config;             //
+    uint8_t       update_flag;            // 升级标志位
     uint32_t    firmware_len;           // 固件长度
     uint32_t    firmware_crc;           // 固件CRC校验
     uint8_t     firmware_url[200];      // 固件URL
-    INT8U       err_flag;               // 升級錯誤類型
-    INT8U       md5[8];                 // MD5前8位作为存储校验
+    uint8_t       err_flag;               // 升級錯誤類型
+    uint8_t       md5[8];                 // MD5前8位作为存储校验
 } UPDATE_STRUCT;
 
 /**
@@ -55,12 +50,8 @@ typedef enum {
  * @param len
  * @return
  */
-int set_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len);
+int set_config(CONFIG_KEY config_name, char *value, uint32_t len);
 
-int get_config(CONFIG_KEY config_name, uint8_t *value, uint32_t len);
+int get_config(CONFIG_KEY config_name, char *value, uint32_t len);
 
-void erase_config_flash(uint32_t address);
-
-int write_flash(uint32_t *flash_address, uint32_t* data, uint32_t data_length, uint32_t flash_end_address);
-
-#endif //FW_STM32_1S_FLASH_H
+#endif // !__XD_FLASH_H__

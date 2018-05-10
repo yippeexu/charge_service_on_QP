@@ -128,10 +128,12 @@ void USART1_IRQHandler(void)
 		}
 
 		fifo_in_c(&receiver_fifo, (uint8_t)d); //put into receiver fifo
-		//QS_BEGIN(USER_USART_PORT, &l_usart_port); /* application-specific record begin */
+
+		/* 在临界区内部或ISR内部，应该调用带_NOCRIT宏，避免临界区嵌套 */
+		//QS_BEGIN_NOCRIT(USER_USART_PORT, &l_usart_port); /* application-specific record begin */
 		//	//QS_STR(&d);                 /* debug info */
 		//	QS_U8(1, d);
-		//QS_END()
+		//QS_END_NOCRIT()
 	}
 }
 
@@ -343,7 +345,7 @@ void BSP_l206_gpio_init(void)
 
 void _debug_print(char *fmt, ...)
 {
-	char buf[100];
+	char buf[300];
 
 	va_list ap;
 	va_start(ap, fmt);
