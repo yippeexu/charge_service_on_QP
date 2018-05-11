@@ -21,6 +21,9 @@ enum CHARGERsignals {
 	NETWORK_ERROR_SIG,			// posted directly to DISPLAY from MODULE.
 	MODULE_RESTART_SIG,			// used by MODULE for restart 2G module.
 	MQTT_STATUS_CHECK_SIG,		// used by MODULE for check MQTT status time events.
+	MQTT_STATUS_ERROR_SIG,		// used by MODULE for notify MQTT status error.
+	MQTT_CONNECTED_SIG,			// posted directly to DISPLAY from MODULE.
+	FIRST_REPORT_SIG,			// used by MODULE for first report.
 	OPEN_SERVICE_START_SIG,		// posted directly to DISPLAY from MODULE.
 	BATTERY_STATUS_SIG,			// posted directly to BATTERY from battery ISR.
 	BATTERY_CHECK_SIG,			// used by BATTERY for check battery time events.

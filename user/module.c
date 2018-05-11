@@ -6,8 +6,8 @@
 
 Q_DEFINE_THIS_MODULE("module")
 
-
-#define SM_WANT_TRY_MANY_TIMES(me_, state_, times_)	do { \
+/* 超时处理：重试，当超过次数后重启模块。 */
+#define TMOUT_PROC_TRY_AGAIN(me_, state_, times_)	do { \
 											if ((me_)->was_armed == 0 && (me_)->timeout_count == 0) { \
 												(me_)->was_armed = 1; \
 												status_ = Q_HANDLED(); \
@@ -21,17 +21,22 @@ Q_DEFINE_THIS_MODULE("module")
 											} \
 										}while(0)
 
-#define SM_GOTO_NEXT_STATE(me_, state_)	do { \
+/* 超时处理：不重试而进入下一个状态。设置 was_armed=2 的目的是超时后was_armed必为0，*
+ *         对下一个状态造成影响。该宏与EXIT_GOTO_NEXT_STATE()搭配使用。 */
+#define TMOUT_PROC_GOTO_NEXT_STATE(me_, state_)	do { \
+											debug_print("[TIMEOUT]was_armed = %d", (me_)->was_armed); \
 											if ((me_)->was_armed == 0) { \
 												(me_)->was_armed = 1; \
 												status_ = Q_HANDLED(); \
 											} \
 											else { \
+												(me_)->was_armed = 2; \
 												status_ = Q_TRAN((state_)); \
 											} \
 										}while(0)
 
-#define SM_GET_ERROR(me_)	do { \
+ /* 超时处理：直接重启模块。 */
+#define TMOUT_PROC_MODULE_RESTART(me_)	do { \
 								if ((me_)->was_armed == 0) { \
 									(me_)->was_armed = 1; \
 									status_ = Q_HANDLED(); \
@@ -42,18 +47,46 @@ Q_DEFINE_THIS_MODULE("module")
 								} \
 							}while(0)
 
+/* 在状态EXIT时使用。该宏与 TMOUT_PROC_GOTO_NEXT_STATE() 搭配使用 */
+#define EXIT_GOTO_NEXT_STATE(me_, timeEvt_)	do { \
+								debug_print("[EXIT]was_armed = %d", (me_)->was_armed); \
+								if ((me_)->was_armed == 2) { \
+									QTimeEvt_disarm((timeEvt_)); \
+									(me_)->was_armed = 1; \
+								} \
+								else { \
+									(me_)->was_armed = QTimeEvt_disarm((timeEvt_)); \
+								} \
+								}while(0)
+
+/* 超时处理。参考TMOUT_PROC_GOTO_NEXT_STATE(), 增加了额外处理,用于。 */
+#define TMOUT_PROC_GOTO_NEXT_STATE_EXT1(me_, state_) do { \
+											debug_print("[TIMEOUT]was_armed = %d", (me_)->was_armed); \
+											if ((me_)->was_armed == 0) { \
+												(me_)->was_armed = 1; \
+												status_ = Q_HANDLED(); \
+											} \
+											else { \
+												(me_)->was_armed = 2; \
+												QACTIVE_POST(&(me_)->super, Q_NEW(QEvt, MQTT_STATUS_ERROR_SIG), (me_)); \
+												status_ = Q_TRAN((state_)); \
+											} \
+										}while(0)
+
 typedef struct {
 	QActive super;
 
 	QTimeEvt delayTimeEvt;
 	QTimeEvt recvDataTimeEvt;
+	QTimeEvt mqttStatusTimeEvt;
+	QEQueue deferredEvtQueue; /* native QF queue for deferred request events */
+	QEvt const *deferredQSto[5]; /* storage for deferred queue buffer */
 	uint8_t timeout_count;
-	uint8_t mqtt_conn_timeout_count;
-	uint8_t mqtt_send_timeout_count;
-	uint8_t mqtt_status_timeout_count;
+	uint32_t mqtt_conn_timeout_count;
+	uint32_t mqtt_status_error_count;
 	uint8_t power_on_step;
 	uint8_t error_code;
-	bool was_armed;
+	uint8_t was_armed;
 	bool ctrl_output;
 	bool onoutputing;
 	bool oncharging;
@@ -102,14 +135,14 @@ static QState Module_set_mqttconfig(Module * const me, QEvt const * const e);
 static QState Module_set_mqtt_start(Module * const me, QEvt const * const e);
 static QState Module_mqtt_connect(Module * const me, QEvt const * const e);
 static QState Module_mqtt_sub(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_connected(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_idle(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_busy(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_wait_ack(Module * const me, QEvt const * const e);
-//static QState Module_check_mqtt_status(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_sleep_long(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_sleep_short(Module * const me, QEvt const * const e);
-//static QState Module_mqtt_disconnect(Module * const me, QEvt const * const e);
+static QState Module_mqtt_connected(Module * const me, QEvt const * const e);
+static QState Module_mqtt_idle(Module * const me, QEvt const * const e);
+static QState Module_mqtt_busy(Module * const me, QEvt const * const e);
+static QState Module_mqtt_wait_ack(Module * const me, QEvt const * const e);
+static QState Module_check_mqtt_status(Module * const me, QEvt const * const e);
+static QState Module_mqtt_sleep_long(Module * const me, QEvt const * const e);
+static QState Module_mqtt_sleep_short(Module * const me, QEvt const * const e);
+static QState Module_mqtt_disconnect(Module * const me, QEvt const * const e);
 static QState Module_device_active(Module * const me, QEvt const * const e);
 static QState Module_set_httpssl(Module * const me, QEvt const * const e);
 static QState Module_set_http_alive(Module * const me, QEvt const * const e);
@@ -132,12 +165,14 @@ void Module_ctor(void)
 	QActive_ctor(&me->super, Q_STATE_CAST(&Module_initial));
 	QTimeEvt_ctorX(&me->delayTimeEvt, &me->super, DELAY_TIMEOUT_SIG, 0);
 	QTimeEvt_ctorX(&me->recvDataTimeEvt, &me->super, RECV_DATA_TIMEOUT_SIG, 0);
-
-	me->mqtt_conn_timeout_count = 0;
+	QTimeEvt_ctorX(&me->mqttStatusTimeEvt, &me->super, MQTT_STATUS_CHECK_SIG, 0);
+	QEQueue_init(&me->deferredEvtQueue, me->deferredQSto, Q_DIM(me->deferredQSto));	
 }
 
 static QState Module_initial(Module * const me, QEvt const * const e)
 {
+	me->mqtt_conn_timeout_count = 0;
+
 	L206_SLEEP_PRESS(); // 始终处于非睡眠模式
 	L206_POWER_ON();	// 2G模块上电
 
@@ -186,6 +221,14 @@ static QState Module_initial(Module * const me, QEvt const * const e)
 	QS_FUN_DICTIONARY(&Module_set_mqtt_start);
 	QS_FUN_DICTIONARY(&Module_mqtt_connect);
 	QS_FUN_DICTIONARY(&Module_mqtt_sub);
+	QS_FUN_DICTIONARY(&Module_mqtt_connected);
+	QS_FUN_DICTIONARY(&Module_mqtt_idle);
+	QS_FUN_DICTIONARY(&Module_mqtt_busy);
+	QS_FUN_DICTIONARY(&Module_mqtt_wait_ack);
+	QS_FUN_DICTIONARY(&Module_check_mqtt_status);
+	QS_FUN_DICTIONARY(&Module_mqtt_sleep_long);
+	QS_FUN_DICTIONARY(&Module_mqtt_sleep_short);
+	QS_FUN_DICTIONARY(&Module_mqtt_disconnect);
 	QS_FUN_DICTIONARY(&Module_device_active);
 	QS_FUN_DICTIONARY(&Module_set_httpssl);
 	QS_FUN_DICTIONARY(&Module_set_http_alive);
@@ -338,7 +381,7 @@ static QState Module_hands(Module * const me, QEvt const * const e)
 	}
 	case RECV_DATA_TIMEOUT_SIG: {		
 		//debug_print("was_armed = %d, timeout_count = %d", me->was_armed, me->timeout_count);
-		SM_WANT_TRY_MANY_TIMES(me, &Module_hands, 10);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_hands, 10);
 		break;
 	}
 	default: {
@@ -376,7 +419,7 @@ static QState Module_set_baudrate(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_set_baudrate, 3);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_set_baudrate, 3);
 		break;
 	}
 	default: {
@@ -414,7 +457,7 @@ static QState Module_close_echo(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_close_echo, 3);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_close_echo, 3);
 		break;
 	}
 	default: {
@@ -452,7 +495,7 @@ static QState Module_check_model(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_check_model, 3);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_check_model, 3);
 		break;
 	}
 	default: {
@@ -507,7 +550,7 @@ static QState Module_check_fm_version(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_check_fm_version, 3);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_check_fm_version, 3);
 		break;
 	}
 	default: {
@@ -555,7 +598,7 @@ static QState Module_get_sn(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_get_sn, 5);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_get_sn, 5);
 		break;
 	}
 	default: {
@@ -604,7 +647,7 @@ static QState Module_get_imei(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_get_imei, 5);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_get_imei, 5);
 		break;
 	}
 	default: {
@@ -649,7 +692,7 @@ static QState Module_check_sim_pin(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_check_sim_pin, 8);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_check_sim_pin, 8);
 		break;
 	}
 	default: {
@@ -723,7 +766,7 @@ static QState Module_get_csq(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_get_csq, 20);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_get_csq, 20);
 		break;
 	}
 	default: {
@@ -767,7 +810,7 @@ static QState Module_check_cgreg(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_check_cgreg, 40);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_check_cgreg, 40);
 		break;
 	}
 	default: {
@@ -805,7 +848,7 @@ static QState Module_check_cgatt(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_check_cgatt, 40);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_check_cgatt, 40);
 		break;
 	}
 	default: {
@@ -843,7 +886,7 @@ static QState Module_set_apn(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_set_apn, 3);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_set_apn, 3);
 		break;
 	}
 	default: {
@@ -881,7 +924,7 @@ static QState Module_active_pdp(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_active_pdp, 30);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_active_pdp, 30);
 		break;
 	}
 	default: {
@@ -902,7 +945,7 @@ static QState Module_get_utc_time(Module * const me, QEvt const * const e)
 		break;
 	}
 	case Q_EXIT_SIG: {
-		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		EXIT_GOTO_NEXT_STATE(me, &me->recvDataTimeEvt);
 		status_ = Q_HANDLED();
 		break;
 	}
@@ -921,7 +964,7 @@ static QState Module_get_utc_time(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GOTO_NEXT_STATE(me, &Module_get_location);
+		TMOUT_PROC_GOTO_NEXT_STATE(me, &Module_get_location);
 		break;
 	}
 	default: {
@@ -942,7 +985,7 @@ static QState Module_get_location(Module * const me, QEvt const * const e)
 		break;
 	}
 	case Q_EXIT_SIG: {
-		me->was_armed = QTimeEvt_disarm(&me->recvDataTimeEvt);
+		EXIT_GOTO_NEXT_STATE(me, &me->recvDataTimeEvt);
 		status_ = Q_HANDLED();
 		break;
 	}
@@ -961,7 +1004,7 @@ static QState Module_get_location(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GOTO_NEXT_STATE(me, &Module_get_iccid);
+		TMOUT_PROC_GOTO_NEXT_STATE(me, &Module_get_iccid);
 		break;
 	}
 	default: {
@@ -994,6 +1037,7 @@ static QState Module_get_iccid(Module * const me, QEvt const * const e)
 			p += strlen("+ICCID: ");
 			int ret = is_string(p, ICCID_MAX_LENGTH);
 			if (ret == 0) {
+				me->timeout_count = 0;
 				// TODO : 需要初始化me->info.iccid赋值
 				debug_print("[old]iccid = %s", me->info.iccid);
 				if (strncmp(me->info.iccid, p, ICCID_MAX_LENGTH) == 0) {
@@ -1004,7 +1048,6 @@ static QState Module_get_iccid(Module * const me, QEvt const * const e)
 					debug_print("[new]iccid = %s", me->info.iccid);
 					status_ = Q_TRAN(&Module_device_active);
 				}			
-				me->timeout_count = 0;
 			}
 			else {
 				status_ = Q_HANDLED();
@@ -1016,7 +1059,7 @@ static QState Module_get_iccid(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_WANT_TRY_MANY_TIMES(me, &Module_get_iccid, 5);
+		TMOUT_PROC_TRY_AGAIN(me, &Module_get_iccid, 5);
 		break;
 	}
 	default: {
@@ -1046,9 +1089,19 @@ static QState Module_mqtt_connecting(Module * const me, QEvt const * const e)
 		break;
 	}
 	case MODULE_RESTART_SIG: {
-		// TODO : 这个地方要增加重连睡眠机制
+		// TODO 
 		//QACTIVE_POST(AO_DISPLAY, NETWORK_ERROR_SIG, error_code);
-		status_ = Q_TRAN(&Module_power);
+		me->mqtt_conn_timeout_count++;
+		debug_print("mqtt_conn_timeout_count = %d", me->mqtt_conn_timeout_count);
+		if (me->mqtt_conn_timeout_count % 9 == 0) {
+			status_ = Q_TRAN(&Module_mqtt_sleep_long);
+		}
+		else if (me->mqtt_conn_timeout_count % 3 == 0) {
+			status_ = Q_TRAN(&Module_mqtt_sleep_short);
+		}
+		else {
+			status_ = Q_TRAN(&Module_mqtt_disconnect);
+		}
 		break;
 	}
 	default: {
@@ -1085,7 +1138,7 @@ static QState Module_set_mqtttmout(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1125,7 +1178,7 @@ static QState Module_set_mqttconfig(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1162,7 +1215,7 @@ static QState Module_set_mqtt_start(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1199,7 +1252,7 @@ static QState Module_mqtt_connect(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1232,7 +1285,6 @@ static QState Module_mqtt_sub(Module * const me, QEvt const * const e)
 		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "SUBACK");
 		if (p) {
 			status_ = Q_TRAN(&Module_mqtt_connected);
-			status_ = Q_HANDLED();
 		}
 		else {
 			status_ = Q_HANDLED();
@@ -1240,11 +1292,262 @@ static QState Module_mqtt_sub(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
 		status_ = Q_SUPER(&Module_mqtt_connecting);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_connected(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->mqttStatusTimeEvt, BSP_TICKS_PER_SEC * 60 * 3, BSP_TICKS_PER_SEC * 60 * 3);
+		// TODO
+		//QACTIVE_POST(AO_DISPLAY, Q_NEW(QEvt， MQTT_CONNECTED_SIG)， me);
+		QACTIVE_POST(&me->super, Q_NEW(QEvt, FIRST_REPORT_SIG), me);
+		me->mqtt_status_error_count = 0;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		QTimeEvt_disarm(&me->mqttStatusTimeEvt);
+		QActive_flushDeferred(&me->super, &me->deferredEvtQueue);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_INIT_SIG: {
+		status_ = Q_TRAN(&Module_mqtt_idle);
+		break;
+	}
+	case MQTT_STATUS_ERROR_SIG: {
+		if (++me->mqtt_status_error_count >= 2) {
+			QACTIVE_POST(&me->super, Q_NEW(QEvt, MODULE_RESTART_SIG), me);
+		}
+		status_ = Q_HANDLED();
+		break;
+	}
+	case MODULE_RESTART_SIG: {
+		//QACTIVE_POST(AO_DISPLAY, Q_NEW(QEvt， MQTT_DISCONNECTED_SIG)， me);
+		status_ = Q_TRAN(&Module_mqtt_disconnect);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_idle(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		/* recall the oldest deferred event... */
+		if (QActive_recall(&me->super, &me->deferredEvtQueue)) {
+			debug_print("Event recalled");
+		}
+		else {
+			debug_print("No deferred event");
+		}
+		status_ = Q_HANDLED();
+		break;
+	}
+	case FIRST_REPORT_SIG: {
+
+		status_ = Q_TRAN(&Module_mqtt_wait_ack);
+		break;
+	}
+	case MQTT_STATUS_CHECK_SIG: {
+
+		status_ = Q_TRAN(&Module_check_mqtt_status);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connected);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_busy(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		status_ = Q_HANDLED();
+		break;
+	}
+	case FIRST_REPORT_SIG: {
+		/* defer the new request event... */
+		if (QActive_defer(&me->super, &me->deferredEvtQueue, e)) {
+			debug_print("Event #%d deferred", e->sig);
+		}
+		else {
+			/* notify the request sender that his request was denied... */
+			debug_print("Event #%d IGNORED, can't be deferred", e->sig);
+		}
+
+		status_ = Q_HANDLED();
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_connected);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_wait_ack(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 10, 0U);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		EXIT_GOTO_NEXT_STATE(me, &me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "PUBACK");
+		if (p) {
+			status_ = Q_TRAN(&Module_mqtt_idle);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		TMOUT_PROC_GOTO_NEXT_STATE(me, &Module_mqtt_idle);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_busy);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_check_mqtt_status(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		EXIT_GOTO_NEXT_STATE(me, &me->recvDataTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case UART_DATA_READY_SIG: {
+		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
+		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+MQTTSTATU:1");
+		if (p) {
+			me->mqtt_status_error_count = 0;
+			status_ = Q_TRAN(&Module_mqtt_idle);
+		}
+		else {
+			status_ = Q_HANDLED();
+		}
+		break;
+	}
+	case RECV_DATA_TIMEOUT_SIG: {
+		TMOUT_PROC_GOTO_NEXT_STATE_EXT1(me, &Module_mqtt_idle);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_mqtt_busy);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_sleep_long(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		/* 延时1 hour */
+		QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 60 * 60, 0U);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		QTimeEvt_disarm(&me->delayTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case DELAY_TIMEOUT_SIG: {
+		status_ = Q_TRAN(&Module_mqtt_disconnect);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_sleep_short(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		/* 延时10 mins */
+		QTimeEvt_armX(&me->delayTimeEvt, BSP_TICKS_PER_SEC * 60 * 10, 0U);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		QTimeEvt_disarm(&me->delayTimeEvt);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case DELAY_TIMEOUT_SIG: {
+		status_ = Q_TRAN(&Module_mqtt_disconnect);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
+		break;
+	}
+	}
+	return status_;
+}
+static QState Module_mqtt_disconnect(Module * const me, QEvt const * const e)
+{
+	QState status_;
+	switch (e->sig) {
+	case Q_ENTRY_SIG: {
+		QACTIVE_POST(&me->super, Q_NEW(QEvt, MODULE_RESTART_SIG), me);
+		status_ = Q_HANDLED();
+		break;
+	}
+	case Q_EXIT_SIG: {
+		status_ = Q_HANDLED();
+		break;
+	}
+	case MODULE_RESTART_SIG: {
+		status_ = Q_TRAN(&Module_power);
+		break;
+	}
+	default: {
+		status_ = Q_SUPER(&Module_on);
 		break;
 	}
 	}
@@ -1303,7 +1606,7 @@ static QState Module_set_httpssl(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1340,7 +1643,7 @@ static QState Module_set_http_alive(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1381,7 +1684,7 @@ static QState Module_set_http_url(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1418,7 +1721,7 @@ static QState Module_set_http_port(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1455,7 +1758,7 @@ static QState Module_http_setup(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
@@ -1504,7 +1807,7 @@ static QState Module_http_action(Module * const me, QEvt const * const e)
 		break;
 	}
 	case RECV_DATA_TIMEOUT_SIG: {
-		SM_GET_ERROR(me);
+		TMOUT_PROC_MODULE_RESTART(me);
 		break;
 	}
 	default: {
