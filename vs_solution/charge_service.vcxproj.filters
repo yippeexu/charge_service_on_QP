@@ -201,6 +201,9 @@
     <ClCompile Include="..\user\security\aes.c">
       <Filter>user\secutiry</Filter>
     </ClCompile>
+    <ClCompile Include="..\user\battery.c">
+      <Filter>user</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\STM32F1xx_DFP\2.0.0\Device\Source\ARM\startup_stm32f10x_hd.s">

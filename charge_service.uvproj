@@ -446,6 +446,11 @@
               <FileType>1</FileType>
               <FilePath>.\user\http.c</FilePath>
             </File>
+            <File>
+              <FileName>battery.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\battery.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

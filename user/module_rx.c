@@ -25,7 +25,7 @@ static QState Module_rx_polling(Module_rx * const me, QEvt const * const e);
 static Module_rx l_module_rx;
 
 /* Global objects ----------------------------------------------------------*/
-QActive * const AO_Module_rx = &l_module_rx.super; /* "opaque" pointers to Philo AO */
+QActive * const AO_Module_rx = &l_module_rx.super; /* "opaque" pointers to Module_rx AO */
 
 fifo_t receiver_fifo;
 uint8_t receiver_fifo_buf[FIFO_MAX_LENGTH] = { 0 };
@@ -41,7 +41,6 @@ void Module_rx_ctor(void)
 	fifo_init(&receiver_fifo, receiver_fifo_buf, sizeof(receiver_fifo_buf));
 
 }
-
 static QState Module_rx_initial(Module_rx * const me, QEvt const * const e)
 {
 
@@ -53,10 +52,10 @@ static QState Module_rx_initial(Module_rx * const me, QEvt const * const e)
 	QS_FUN_DICTIONARY(&Module_rx_polling);
 
 	QS_SIG_DICTIONARY(POLL_UART_DATA_SIG, me);
+	QS_SIG_DICTIONARY(UART_DATA_READY_SIG, (void *)0);
 
 	return Q_TRAN(&Module_rx_idle);
 }
-
 static QState Module_rx_idle(Module_rx * const me, QEvt const * const e)
 {
 	QState status_;
@@ -80,7 +79,6 @@ static QState Module_rx_idle(Module_rx * const me, QEvt const * const e)
 	}
 	return status_;
 }
-
 static QState Module_rx_polling(Module_rx * const me, QEvt const * const e)
 {
 	QState status_;

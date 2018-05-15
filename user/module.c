@@ -72,6 +72,12 @@ Q_DEFINE_THIS_MODULE("module")
 												status_ = Q_TRAN((state_)); \
 											} \
 										}while(0)
+/* Module所关心的battery status */
+typedef struct {
+	uint8_t oncharging;
+	uint8_t onoutputing;
+	uint8_t vol_percent;
+}battery_status_care_t;
 
 typedef struct {
 	QActive super;
@@ -83,19 +89,16 @@ typedef struct {
 	QEvt const *deferredQSto[5]; /* storage for deferred queue buffer */
 	uint8_t timeout_count;
 	uint32_t mqtt_conn_timeout_count;
-	uint32_t mqtt_status_error_count;
+	uint8_t mqtt_status_error_count;
 	uint8_t power_on_step;
 	uint8_t error_code;
 	uint8_t was_armed;
-	bool ctrl_output;
-	bool onoutputing;
-	bool oncharging;
-	uint8_t vol_percent;
 	uint8_t l206_ver_compatible;
 	uint8_t csq;
 	char latitude[15];
 	char longitude[15];
 	sys_info_t info;	// 业务关键参数
+	battery_status_care_t bat;
 }Module;
 
 enum STEP {
@@ -190,6 +193,12 @@ static QState Module_initial(Module * const me, QEvt const * const e)
 	//http_set_url_request(at_httppara_url_buf, &me->info, "active\0", NULL, 0);
 	//debug_print("[url]:%s", at_httppara_url_buf);
 
+	QActive_subscribe((QActive *)me, BATTERY_OK_SIG);
+	QActive_subscribe((QActive *)me, BATTERY_FAULT_SIG);
+	QActive_subscribe((QActive *)me, CHARGE_ON_SIG);
+	QActive_subscribe((QActive *)me, CHARGE_OFF_SIG);
+	QActive_subscribe((QActive *)me, VOL_PERCENT_UPDATE_SIG);
+
 	QS_OBJ_DICTIONARY(&l_module);
 	QS_OBJ_DICTIONARY(&l_module.delayTimeEvt);
 	QS_OBJ_DICTIONARY(&l_module.recvDataTimeEvt);
@@ -244,6 +253,8 @@ static QState Module_initial(Module * const me, QEvt const * const e)
 	QS_SIG_DICTIONARY(MODULE_RESTART_SIG, me);
 	QS_SIG_DICTIONARY(MQTT_STATUS_CHECK_SIG, me);
 	QS_SIG_DICTIONARY(OPEN_SERVICE_START_SIG, me);
+	QS_SIG_DICTIONARY(FIRST_REPORT_SIG, me);
+	QS_SIG_DICTIONARY(MQTT_STATUS_ERROR_SIG, me);
 
 
 	return Q_TRAN(&Module_power);
@@ -254,6 +265,31 @@ static QState Module_on(Module * const me, QEvt const * const e)
 	switch (e->sig) {
 	case Q_INIT_SIG: {
 		status_ = Q_TRAN(&Module_power);
+		break;
+	}
+	case CHARGE_ON_SIG: {
+		me->bat.oncharging = 1;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case CHARGE_OFF_SIG: {
+		me->bat.oncharging = 0;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case OUTPUT_OPEN_SIG: {
+		me->bat.onoutputing = 1;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case OUTPUT_CLOSE_SIG: {
+		me->bat.onoutputing = 0;
+		status_ = Q_HANDLED();
+		break;
+	}
+	case VOL_PERCENT_UPDATE_SIG: {
+		me->bat.vol_percent = Q_EVT_CAST(normalEvt)->v;
+		status_ = Q_HANDLED();
 		break;
 	}
 	default: {
@@ -1360,7 +1396,7 @@ static QState Module_mqtt_idle(Module * const me, QEvt const * const e)
 		break;
 	}
 	case FIRST_REPORT_SIG: {
-
+		// TODO
 		status_ = Q_TRAN(&Module_mqtt_wait_ack);
 		break;
 	}
@@ -1446,6 +1482,12 @@ static QState Module_check_mqtt_status(Module * const me, QEvt const * const e)
 	switch (e->sig) {
 	case Q_ENTRY_SIG: {
 		QTimeEvt_armX(&me->recvDataTimeEvt, BSP_TICKS_PER_SEC * 2, 0U);
+		if (me->l206_ver_compatible == 1) {
+			BSP_usart1_tx_buffer(L206_MQTTSTATU, sizeof(L206_MQTTSTATU));
+		}
+		else {
+			BSP_usart1_tx_buffer(L206_MIPSTART, sizeof(L206_MIPSTART));
+		}
 		status_ = Q_HANDLED();
 		break;
 	}
@@ -1456,7 +1498,14 @@ static QState Module_check_mqtt_status(Module * const me, QEvt const * const e)
 	}
 	case UART_DATA_READY_SIG: {
 		Q_ASSERT(Q_EVT_CAST(UartDataEvt)->data != NULL && Q_EVT_CAST(UartDataEvt)->len > 0);
-		char *p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+MQTTSTATU:1");
+		char *p = NULL;
+		if (me->l206_ver_compatible == 1) {
+			p = strstr(Q_EVT_CAST(UartDataEvt)->data, "+MQTTSTATU:1");
+		}
+		else {
+			p = strstr(Q_EVT_CAST(UartDataEvt)->data, "ALREADY CONNECT");
+		}
+
 		if (p) {
 			me->mqtt_status_error_count = 0;
 			status_ = Q_TRAN(&Module_mqtt_idle);

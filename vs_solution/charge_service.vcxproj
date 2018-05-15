@@ -154,6 +154,7 @@
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_tim.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_usart.c" />
     <ClCompile Include="..\STM32F1xx_DFP\2.0.0\Device\StdPeriph_Driver\src\stm32f10x_wwdg.c" />
+    <ClCompile Include="..\user\battery.c" />
     <ClCompile Include="..\user\bsp.c" />
     <ClCompile Include="..\user\bsp_usart.c" />
     <ClCompile Include="..\user\common\fifo.c" />

@@ -8,6 +8,7 @@ Q_DEFINE_THIS_MODULE("bsp")
 
 enum KernelAwareISRs {
 	USART1_PRIO = QF_AWARE_ISR_CMSIS_PRI, /* see NOTE00 */
+	USART3_PRIO,
 	SYSTICK_PRIO,
 	/* ... */
 	MAX_KERNEL_AWARE_CMSIS_PRI /* keep always last */
@@ -31,6 +32,7 @@ void BSP_l206_gpio_init(void);
 	/* event-source identifiers used for tracing */
 	static uint8_t const l_SysTick_Handler = 0U;
 	static uint8_t const l_Usart1_IRQHandler = 0U;
+	static uint8_t const l_Usart3_IRQHandler = 0U;
 	static uint8_t const l_debug_port = 0U;
 	static uint8_t const l_usart_port = 0U;
 
@@ -47,6 +49,7 @@ void BSP_init(void) {
 	/* initial reset and clock control*/
 	BSP_RCC_init();
 	BSP_usart1_init();
+	BSP_usart3_init();
 	BSP_l206_gpio_init();
 
 	/* NOTE: SystemInit() has been already called from the startup code
@@ -134,6 +137,115 @@ void USART1_IRQHandler(void)
 		//	//QS_STR(&d);                 /* debug info */
 		//	QS_U8(1, d);
 		//QS_END_NOCRIT()
+	}
+}
+
+uint8_t bat_statue = 0;
+uint8_t batlen = 0;
+uint8_t bat_buf[8] = { 0 };
+uint8_t npos = 0;
+uint16_t bat_sum = 0;
+uint8_t heartbeat_count = 0;
+report_frame_u frame_last = { 0 };
+void USART3_IRQHandler(void)
+{
+	uint8_t d;
+
+	if (USART_GetFlagStatus(USART3, USART_FLAG_ORE) != RESET)	// 溢出错误中断
+	{
+		USART_ClearFlag(USART3, USART_FLAG_ORE);	// 清除标志
+		USART_ReceiveData(USART3);
+	}
+
+	if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)   //接收数据中断
+	{
+		USART_ClearITPendingBit(USART3, USART_IT_RXNE);    // 清中断标记
+		d = USART_ReceiveData(USART3);    /* Get received byte */
+
+		switch (bat_statue) {
+			case 0x00: {
+				if (d == 0xAA) {
+					bat_statue = 0x01;
+				}
+				else {
+					bat_statue = 0x00;
+				}
+				npos = 0;
+				break;
+			}
+			case 0x01: {
+				npos = 0;
+				if (d == 2 || d == 4) {
+					bat_statue = 0x02;
+					batlen = d;
+					bat_buf[npos++] = d;
+				}
+				else {
+					bat_statue = 0x00;
+					npos = 0;
+				}
+				break;
+			}
+			case 0x02: {
+				bat_buf[npos] = d;
+				npos++;
+				if (npos > batlen + 1) {
+					if (bat_buf[1] == 0x01) { // 上报帧
+						bat_sum = 0;
+						for (npos = 0; npos < batlen + 1; npos++) {
+							bat_sum += bat_buf[npos];
+							if (bat_sum > 0xff) {
+								bat_sum = ~bat_sum;
+								bat_sum += 1;
+							}
+							bat_sum = bat_sum & 0xff;
+						}
+						if (bat_sum == bat_buf[npos]) { //校验和正确
+							//debug_print("%x,%x", bat_buf[2] & 0xE0, bat_buf[4]);
+							if ((bat_buf[2] & 0xE0) != (frame_last.buf[0] & 0xE0)
+								|| (bat_buf[4] != frame_last.buf[2]))
+							{
+								memcpy(&frame_last.buf[0], &bat_buf[2], sizeof(frame_last.buf));
+								//debug_print("charge:%d, full:%d, out:%d, percent:%d, sizeof(buf):%d", frame_last.struct_.bit_oncharging,
+									//frame_last.struct_.bit_charge_full, frame_last.struct_.bit_outputing, 
+									//frame_last.struct_.bit_vol_percent, sizeof(frame_last.buf));
+
+								batteryReportEvt *reportEvt = Q_NEW(batteryReportEvt, BATTERY_REPORT_SIG);
+								memcpy(&reportEvt->frame.buf[0], &bat_buf[2], sizeof(frame_last.buf));
+								QACTIVE_POST(AO_Battery, (QEvt *)reportEvt, &l_Usart3_IRQHandler);
+
+								//battery.charge_flag = (bat_buf[2] >> 7) & 0x01;
+								//battery.chargefull = (bat_buf[2] >> 6) & 0x01;
+								//battery.loadflag = (bat_buf[2] >> 5) & 0x01;
+								//battery.vol = (bat_buf[2] & 0x1F) * 256 + bat_buf[3];
+								//battery.out_flag = (bat_buf[4] >> 7) & 0x01;
+								//battery.temp_soc = bat_buf[4] & 0x7F;
+								//if (battery.temp_soc <= 1)       // 忽略掉等于 0 时候的参数值
+								//	battery.temp_soc = 1;
+								//battery.err_bat = 0;
+								//battery_timeout = GetTickCount64();					
+							}
+
+							if (++heartbeat_count >= 120) {
+								heartbeat_count = 0;
+								QACTIVE_POST(AO_Battery, Q_NEW(QEvt, BATTERY_HEARTBEAT_SIG), &l_Usart3_IRQHandler);
+							}
+						}
+					}
+						bat_statue = 0x00;
+						npos = 0;
+				}
+				if (bat_buf[0] == 0x02) {
+					bat_statue = 0x00;
+					npos = 0;
+				}
+			break;
+			}
+			default: {
+				bat_statue = 0x00;
+				break;
+			}
+		}
 	}
 }
 
@@ -233,9 +345,14 @@ uint8_t QS_onStartup(void const *arg) {
 	QS_FILTER_ON(QS_QEP_DISPATCH);
 	QS_FILTER_ON(QS_QEP_UNHANDLED);
 
+	QS_FILTER_ON(QS_QF_PUBLISH);
+
 	QS_FILTER_ON(USER_DEBUG_PORT);
 	QS_FILTER_ON(USER_USART_PORT);
 
+	/* for ISR */
+	QS_SIG_DICTIONARY(UART_DATA_BEGIN_SIG, (void *)0);
+	QS_SIG_DICTIONARY(BATTERY_REPORT_SIG, (void *)0);
 
 	return (uint8_t)1; /* return success */
 }
@@ -318,11 +435,13 @@ void BSP_NVIC_init(void)
 
 	NVIC_SetPriorityGrouping(3); // NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 	NVIC_SetPriority(USART1_IRQn, USART1_PRIO);
+	NVIC_SetPriority(USART3_IRQn, USART3_PRIO);
 	NVIC_SetPriority(SysTick_IRQn, SYSTICK_PRIO);
 	/* ... */
 
 	/* enable IRQs... */
 	NVIC_EnableIRQ(USART1_IRQn);
+	NVIC_EnableIRQ(USART3_IRQn);
 }
 
 void BSP_l206_gpio_init(void)

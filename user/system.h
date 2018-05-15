@@ -46,6 +46,12 @@ typedef struct {
 	char sec_key[SECKEY_MAX_LENGTH + 1];
 }sys_info_t;
 
+typedef struct {
+	uint8_t oncharging;
+	uint8_t charge_full;
+	uint8_t onoutputing;
+	uint8_t vol_percent;
+}battery_status_t;
 
 
 #include <error_code.h>
